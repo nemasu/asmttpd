@@ -19,10 +19,13 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.01"
+%define ASMTTPD_VERSION "0.02"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
-%define THREAD_POOL_SIZE 16 ; Number of worker threads
+
+; Worker thread count should reflect the amount of RAM you have
+; eg. 2GB of RAM available to daemon with THREAD_BUFFER_SIZE at 11534336(11MB) = ~180 threads
+%define THREAD_POOL_SIZE 100 ; Number of worker threads
 
 ;Follwing amd64 syscall standards for internal function calls: rdi rsi rdx r10 r8 r9
 section .data
@@ -43,6 +46,14 @@ section .text
 global  _start
 
 _start:
+	
+	;mov rdi, filter_test
+	;mov rsi, filter_prev_dir
+	;call string_remove
+	;mov rdi, rax
+	;call print_rdi
+
+	;call exit
 
 	mov rdi, start_text
 	mov rsi, start_text_len
@@ -161,7 +172,7 @@ worker_thread:
 	sub rsp, 16
 	mov QWORD [rbp-16], 0 ; Used for pointer to recieve buffer
 
-	mov rdi, HUNDRED_MB
+	mov rdi, THREAD_BUFFER_SIZE
 	call sys_mmap_mem
 	mov QWORD [rbp-16], rax
 
@@ -197,11 +208,11 @@ worker_thread_continue:
 	;HTTP Stuff starts here
 	mov rdi, QWORD [rbp-8] ;fd
 	mov rsi, [rbp-16]      ;buffer
-	mov rdx, HUNDRED_MB    ;size
+	mov rdx, THREAD_BUFFER_SIZE    ;size
 	call sys_recv
 	cmp rax, 0
 	jl worker_thread_close
-
+	
 	mov r11, rax ; save original received length
 	
 	;Find request
@@ -245,6 +256,7 @@ worker_thread_continue:
 
 	dec r12 ; get rid of 0x00
 
+	; Adds the file to the end of buffer ( where we juts put the document prefix )
 	mov rsi, [rbp-16]
 	add rsi, r8  ; points to beginning of path
 	mov rdi, [rbp-16]
@@ -254,55 +266,51 @@ worker_thread_continue:
 	add r12, rcx
 	rep movsb
 
-	dec r12
+	dec r12 ; exclude space character
 	mov rdi, [rbp-16]
 	add rdi, r12
 	mov BYTE [rdi], 0x00 ; add null
 
-	;check if its .htm or .html
-	mov r8, 1 ;r8 now free to use. 0 for html, 1 for octet
+	mov r9, r11 ; saving offset into a stack saved register
+	; [rbp-16] + r10 now holds string for file opening
 
-	sub rdi, 5
-	cmp BYTE [rdi], 0x2E ;check for '.'
-	mov rax, 0 ;long version
-	je worker_thread_file_type_detect
-	inc rdi
-	cmp BYTE [rdi], 0x2E ;check for '.'
-	mov rax, 1 ;short version
-	je worker_thread_file_type_detect
-	jmp worker_thread_response ; no '.' found, must be octet
+	; Simple request logging
+	mov rdi, msg_request_log
+	mov rsi, msg_request_log_len
+	call sys_write
+	mov rdi, [rbp-16]
+	add rdi, r9
+	call get_string_length
+	mov rsi, rax
+	call print_line
+	;-----Simple logging
+	
+	
+	worker_thread_remove_pre_dir:
+	mov rdi, [rbp-16]
+	add rdi, r9
+	mov rsi, filter_prev_dir ; remove any '../'
+	call string_remove
+	cmp rax, 0
+	jne worker_thread_remove_pre_dir
 
-	worker_thread_file_type_detect:
-	;continue looking for next characters
-	inc rdi
-	cmp BYTE [rdi], 0x68 ; h
-	jne worker_thread_response
-	inc rdi
-	cmp BYTE [rdi], 0x74 ; t
-	jne worker_thread_response
-	inc rdi
-	cmp BYTE [rdi], 0x6D ; m
-	jne worker_thread_response
 
-	cmp rax, 1  ; is short version? then its .htm
-	je worker_thread_short_htm
-
-	inc rdi
-	cmp BYTE [rdi], 0x6C ; l
-	jne worker_thread_response
-
-	worker_thread_short_htm:
-
-	mov r8, 0
+	mov rdi, [rbp-16]
+	add rdi, r9
+	call detect_content_type
+	mov r8, rax ;Content Type
 
 	worker_thread_response:
-	
+
 	mov rdi, [rbp-16]
-	add rdi, r11
+	add rdi, r9
 	call sys_open
 	cmp rax, 0
+
 	jl worker_thread_404_response ;file not found, so 404
-	mov r10, rax ; file fd
+	
+	; Done with buffer offsets, put response and data into it starting at beg
+	mov r10, rax ; r10: file fd
 	jmp worker_thread_200_response ;else, we're good to go
 
 	worker_thread_404_response:
@@ -328,14 +336,16 @@ worker_thread_continue:
 	add rdi, rax ; add length to address
 	mov rsi, rdi
 	mov rdi, r10 ; set fd
-	mov rdx, HUNDRED_MB
-	
-	push rax ; save header length
+	mov rdx, THREAD_BUFFER_SIZE
 	sub rdx, rax          ; take out existing length
+	push rax ; save header length
 	call sys_read
+	
+	cmp rax, 0
 
 	pop rdi  ; restore header length
-
+	jl worker_thread_close_file
+	
 	add rax, rdi ; add header with file data
 	
 	;Send response
@@ -344,6 +354,7 @@ worker_thread_continue:
 	mov rdx, rax
 	call sys_send
 
+	worker_thread_close_file:
 	;Close File
 	mov rdi, r10
 	call sys_close
