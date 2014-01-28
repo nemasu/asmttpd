@@ -86,7 +86,7 @@ sys_trigger_signal:
 	stackpop
 	ret
 
-sys_accept;
+sys_accept:
 	stackpush
 	mov rdi, [listen_socket]
 	xor rsi, rsi
