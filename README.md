@@ -11,7 +11,7 @@ Features:
 * Fast
 
 What works:
-* Serving files from document root as document type HTML.
+* Serving files from specified document root.
 * 404 if file not found.
 * Content-type text/html for *.htm(l), octet for anything else.
   
