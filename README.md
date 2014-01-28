@@ -21,7 +21,7 @@ Planned Features:
   
 Limitations being worked on:
 * Thread pool does not grow, as such it can become unresponsive if all threads are busy.
-* Files are not read in chunks, attempting to tranfer a large file will not work.
+* Files are not read in chunks, attempting to transfer a large file will not work.
   
 Installation
 =======
