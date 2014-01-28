@@ -19,6 +19,7 @@ Planned Features:
 * Directory listing.
   
 Limitations being worked on:
+=======
 * Files are not read in chuncks, attempting to tranfer a large file will not work.
   
 Installation
