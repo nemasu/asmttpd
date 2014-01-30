@@ -211,7 +211,7 @@ worker_thread_continue:
 	mov rdx, THREAD_BUFFER_SIZE    ;size
 	call sys_recv
 	cmp rax, 0
-	jl worker_thread_close
+	jle worker_thread_close
 	
 	mov r11, rax ; save original received length
 	
