@@ -38,7 +38,6 @@ Changes
 =======
 
 2014-01-30 : asmttpd - 0.02
-===
 
 * Added xml, xhtml, gif, png, jpeg, css, and javascript content types.
 * Changed thread memory size to something reasonable. You can tweak it according to available memory. See comments in main.asm
