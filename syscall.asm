@@ -18,6 +18,23 @@
 
 section .text
 
+sys_get_file_size: ;rdi - fd, rax - size
+	stackpush
+	xor rsi, rsi
+	mov rdx, LSEEK_END
+	mov rax, SYS_LSEEK
+	syscall
+	stackpop
+	ret
+
+sys_lseek:; rdi - fd, rsi - offset
+	stackpush
+	mov rdx, LSEEK_SET
+	mov rax, SYS_LSEEK
+	syscall
+	stackpop
+	ret
+
 sys_read:
 	stackpush
 	mov rax, SYS_READ
