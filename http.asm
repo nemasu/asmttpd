@@ -22,72 +22,222 @@ detect_content_type: ;rdi - pointer to buffer that contains request, ret - rax: 
 
 	mov rsi, extension_htm
 	call string_ends_with
-	mov r10, 0
+	mov r10, CONTENT_TYPE_HTML
 	cmp rax, 1
 	je detect_content_type_ret
 
 	mov rsi, extension_html
 	call string_ends_with
-	mov r10, 0
+	mov r10, CONTENT_TYPE_HTML 
 	cmp rax, 1
 	je detect_content_type_ret
 	
 	mov rsi, extension_css
 	call string_ends_with
-	mov r10, 2
+	mov r10, CONTENT_TYPE_CSS
 	cmp rax, 1
 	je detect_content_type_ret
 	
 	mov rsi, extension_javascript
 	call string_ends_with
-	mov r10, 3
+	mov r10, CONTENT_TYPE_JAVASCRIPT
 	cmp rax, 1
 	je detect_content_type_ret
 
 	mov rsi, extension_xhtml
 	call string_ends_with
-	mov r10, 4
+	mov r10, CONTENT_TYPE_XHTML
 	cmp rax, 1
 	je detect_content_type_ret
 
 	mov rsi, extension_xml
 	call string_ends_with
-	mov r10, 5
+	mov r10, CONTENT_TYPE_XML
 	cmp rax, 1
 	je detect_content_type_ret
 
 	mov rsi, extension_gif
 	call string_ends_with
-	mov r10, 6
+	mov r10, CONTENT_TYPE_GIF
 	cmp rax, 1
 	je detect_content_type_ret
 	
 	mov rsi, extension_png
 	call string_ends_with
-	mov r10, 7
+	mov r10, CONTENT_TYPE_PNG
 	cmp rax, 1
 	je detect_content_type_ret
 	
 	mov rsi, extension_jpeg
 	call string_ends_with
-	mov r10, 8
+	mov r10, CONTENT_TYPE_JPEG
 	cmp rax, 1
 	je detect_content_type_ret
 	
 	mov rsi, extension_jpg
 	call string_ends_with
-	mov r10, 8
+	mov r10, CONTENT_TYPE_JPEG
 	cmp rax, 1
 	je detect_content_type_ret
 
-	mov r10, 1 ; default to octet-stream
+	mov r10, CONTENT_TYPE_OCTET_STREAM ; default to octet-stream
 	detect_content_type_ret:
 	mov rax, r10
 	stackpop
 	ret
 
-create_http200_response: ;rdi - pointer to buffer, rsi - type 0 = html, 1 = octet-stream, 2 = css, 3 = javascript, 4 = xhtml, 5 = xml, 
-						 ; 6 = gif, 7 = png, 8 = jpeg, ret: length
+add_content_type_header: ;rdi - pointer to buffer, rsi - type
+	stackpush
+
+	mov r10, rsi
+
+	mov rsi, content_type
+	call string_concat
+
+	cmp r10, CONTENT_TYPE_HTML
+	je add_response_html
+	cmp r10, CONTENT_TYPE_OCTET_STREAM
+	je add_response_octet_stream
+	cmp r10, CONTENT_TYPE_CSS
+	je add_response_css
+	cmp r10, CONTENT_TYPE_JAVASCRIPT
+	je add_response_javascript
+	cmp r10, CONTENT_TYPE_XHTML
+	je add_response_xhtml
+	cmp r10, CONTENT_TYPE_XML
+	je add_response_xml
+	cmp r10, CONTENT_TYPE_GIF
+	je add_response_gif
+	cmp r10, CONTENT_TYPE_PNG
+	je add_response_png
+	cmp r10, CONTENT_TYPE_JPEG
+	je add_response_jpeg
+	
+	jmp add_response_octet_stream
+
+	add_response_html:
+	mov rsi, content_type_html
+	call string_concat
+	jmp add_response_cont
+	
+	add_response_octet_stream:
+	mov rsi, content_type_octet_stream
+	call string_concat
+	jmp add_response_cont
+	
+	add_response_css:
+	mov rsi, content_type_css
+	call string_concat
+	jmp add_response_cont
+
+	add_response_javascript:
+	mov rsi, content_type_javascript
+	call string_concat
+	jmp add_response_cont
+
+	add_response_xhtml:
+	mov rsi, content_type_xhtml
+	call string_concat
+	jmp add_response_cont
+
+	add_response_xml:
+	mov rsi, content_type_xml
+	call string_concat
+	jmp add_response_cont
+
+	add_response_gif:
+	mov rsi, content_type_gif
+	call string_concat
+	jmp add_response_cont
+
+	add_response_png:
+	mov rsi, content_type_png
+	call string_concat
+	jmp add_response_cont
+
+	add_response_jpeg:
+	mov rsi, content_type_jpeg
+	call string_concat
+
+	add_response_cont:
+	stackpop
+	ret
+	
+create_http206_response: ;rdi - pointer, rsi - from, rdx - to, r10 - total r9 - type
+					     ; looks like Content-Length: `rdx subtract rsi add 1`
+						 ;            Content-Range: bytes rsi-rdx/r10
+	stackpush
+
+	push rsi
+	push rdx
+
+	mov rsi, http_206 ; copy first one
+	mov rdx, http_206_len
+	call string_copy
+
+	mov rsi, server_header
+	call string_concat
+
+	mov rsi, connection_header
+	call string_concat
+
+	mov rsi, range_header
+	call string_concat
+	
+	mov rsi, r9
+	call add_content_type_header
+
+	mov rsi, content_length
+	call string_concat
+	
+	pop rdx
+	pop rsi
+	push rsi
+
+	mov r8, rdx
+	sub r8, rsi
+	inc r8 ; inc cause 'to' is zero based
+	mov rsi, r8
+
+	call string_concat_int
+	
+	mov rsi, crlf
+	call string_concat
+	
+	mov rsi, content_range
+	call string_concat
+	
+	pop rsi
+	call string_concat_int
+
+	mov rsi, char_hyphen
+	call string_concat
+
+	mov rsi, rdx
+	call string_concat_int
+
+	mov rsi, char_slash
+	call string_concat
+
+	mov rsi, r10 ; val 
+	call string_concat_int
+	
+	mov rsi, crlfx2
+	call string_concat
+
+	call get_string_length
+	jmp create_http206_response_ret
+
+	create_http206_response_fail:
+	mov rax, 0
+	stackpop
+	ret
+
+	create_http206_response_ret:
+	stackpop
+	ret
+
+create_http200_response: ;rdi - pointer to buffer, rsi - type 
 	stackpush
 
 	mov r10, rsi ;type
@@ -101,78 +251,12 @@ create_http200_response: ;rdi - pointer to buffer, rsi - type 0 = html, 1 = octe
 
 	mov rsi, connection_header
 	call string_concat
-	
-	mov rsi, content_type
+
+	mov rsi, range_header
 	call string_concat
 
-	cmp r10, 0
-	je create_http200_response_html
-	cmp r10, 1
-	je create_http200_response_octet_stream
-	cmp r10, 2
-	je create_http200_response_css
-	cmp r10, 3
-	je create_http200_response_javascript
-	cmp r10, 4
-	je create_http200_response_xhtml
-	cmp r10, 5
-	je create_http200_response_xml
-	cmp r10, 6
-	je create_http200_response_gif
-	cmp r10, 7
-	je create_http200_response_png
-	cmp r10, 8
-	je create_http200_response_jpeg
-	
-	jmp create_http200_response_octet_stream
-
-	
-	create_http200_response_html:
-	mov rsi, content_type_html
-	call string_concat
-	jmp create_http200_response_cont
-	
-	create_http200_response_octet_stream:
-	mov rsi, content_type_octet_stream
-	call string_concat
-	jmp create_http200_response_cont
-	
-	create_http200_response_css:
-	mov rsi, content_type_css
-	call string_concat
-	jmp create_http200_response_cont
-
-	create_http200_response_javascript:
-	mov rsi, content_type_javascript
-	call string_concat
-	jmp create_http200_response_cont
-
-	create_http200_response_xhtml:
-	mov rsi, content_type_xhtml
-	call string_concat
-	jmp create_http200_response_cont
-
-	create_http200_response_xml:
-	mov rsi, content_type_xml
-	call string_concat
-	jmp create_http200_response_cont
-
-	create_http200_response_gif:
-	mov rsi, content_type_gif
-	call string_concat
-	jmp create_http200_response_cont
-
-	create_http200_response_png:
-	mov rsi, content_type_png
-	call string_concat
-	jmp create_http200_response_cont
-
-	create_http200_response_jpeg:
-	mov rsi, content_type_jpeg
-	call string_concat
-	
-	
-	create_http200_response_cont:
+	mov rsi, r10
+	call add_content_type_header
 	
 	mov rsi, crlf
 	call string_concat
@@ -199,6 +283,9 @@ create_http404_response: ;rdi - pointer to buffer
 	call string_concat
 
 	mov rsi, http_404_text
+	call string_concat
+
+	mov rsi, crlf
 	call string_concat
 
 	call get_string_length

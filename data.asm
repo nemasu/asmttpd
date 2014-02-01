@@ -52,28 +52,50 @@
 	msg_using_directory_len equ $ - msg_using_directory
 	msg_not_a_directory dd "Error: Specified document root is not a directory",0x00
 	msg_not_a_directory_len equ $ - msg_not_a_directory
-	msg_request_log dd 0x0a,"Request: ",0x00
+	msg_request_log db 0x0a,"Request: ",0x00
 	msg_request_log_len equ $ - msg_request_log
 
+	header_range_search db "Range: ",0x00
+	header_range_search_len equ $ - header_range_search
 
-	filter_test db "/home/nemasu/../something",0x00
-	filter_test_len equ $ - filter_test
-
+	find_bytes_range db "bytes=",0x00
+	find_bytes_range_len equ $ - find_bytes_range
+	
 	filter_prev_dir db "../",0x00
 	filter_prev_dir_len equ $ - filter_prev_dir
 
+	crlfx2 db 0x0d,0x0a,0x0d,0x0a,0x00
+	crlfx2_len equ $ - crlfx2
+	
 	crlf db 0x0d,0x0a,0x00
 	crlf_len equ $ - crlf
 
+	char_slash db "/",0x00
+	char_hyphen db "-",0x00
+
 	;HTTP
+	;need 413-toolarge 416-rangesucks
+	
 	http_200 db "HTTP/1.1 200 OK",0x0d,0x0a,0x00
 	http_200_len equ $ - http_200
+	http_206 db "HTTP/1.1 206 Partial Content",0x0d,0x0a,0x00
+	http_206_len equ $ - http_206
 	http_404 db "HTTP/1.1 404 Not Found",0x0d,0x0a,0x00
 	http_404_len equ $ - http_404
 	http_404_text db "I'm sorry, Dave. I'm afraid I can't do that. 404 Not Found",0x00
 	http_404_text_len equ $ - http_404_text_len
 	server_header db     "Server: asmttpd/",ASMTTPD_VERSION,0x0d,0x0a,0x00
 	server_header_len equ $ - server_header
+	
+	range_header db "Accept-Ranges: bytes",0x0d,0x0a,0x00
+	range_header_len equ $ - range_header
+
+	content_range db "Content-Range: bytes ",0x00
+	content_range_len equ $ - content_range  ;Content-Range: bytes 200-1000/3000
+	
+	content_length db "Content-Length: ",0x00 ;Content-Length: 800
+	content_length_len equ $ - content_length
+
 	connection_header db "Connection: close",0x0d,0x0a,0x00
 	connection_header_len equ $ - connection_header
 	

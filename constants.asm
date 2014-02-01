@@ -31,6 +31,7 @@
 %define THREAD_BUFFER_SIZE 11534336 ; 11MB local thread storage. 10 MB for file buffer, 1MB for request. Buffer: start [ HTTP-Request,HTTP-Response,File-Data ] end
 					                ; File portion will be reduced incase of large HTTP-Requests.
 
+%define HEADER_RESERVED_SIZE 1048576 ; 1MB
 ;Flags
 %define MMAP_PROT_READ     0x1
 %define MMAP_PROT_WRITE    0x2
@@ -51,11 +52,24 @@
 %define SOCK_STREAM    1
 %define PROTO_TCP      6
 
-;%define RECV_WAITALL   0x100   
+%define LSEEK_SET      0 ; seek to offset bytes
+%define LSEEK_END      2 ; seek to end plus offset
+
+;Internal Constants
+%define CONTENT_TYPE_HTML         0
+%define CONTENT_TYPE_OCTET_STREAM 1
+%define CONTENT_TYPE_CSS          2
+%define CONTENT_TYPE_JAVASCRIPT   3
+%define CONTENT_TYPE_XHTML	      4
+%define CONTENT_TYPE_XML	      5
+%define CONTENT_TYPE_GIF	      6
+%define CONTENT_TYPE_PNG	      7
+%define CONTENT_TYPE_JPEG	      8
 
 ;System Call Values
 %define SYS_READ  0  ;int fd, const void *buf, size_t count
 %define SYS_WRITE 1  ;int fd, const void *buf, size_t count
+%define SYS_LSEEK 8  ;int fd, off_t offset, int whence
 %define SYS_MMAP  9  ;void *addr, size_t length, int prot, int flags, int fd, off_t offset
 %define SYS_CLONE 56 ;unsigned long clone_flags, unsigned long newsp, void ___user *parent_tid, void __user *child_tid, struct pt_regs *regs
 %define SYS_EXIT       60   ;int status

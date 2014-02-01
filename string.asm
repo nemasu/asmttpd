@@ -15,6 +15,83 @@
 ;
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
+string_itoa:; rdi - buffer, rsi - int
+	stackpush
+	push rcx
+	push rbx
+
+	xchg rdi, rsi
+	call get_number_of_digits
+	xchg rdi, rsi
+	mov rcx, rax ;
+	
+	;add null
+	mov al, 0x0
+	mov [rdi+rcx], al
+	dec rcx
+
+	mov rax, rsi ; value to print
+	xor rdx, rdx ; zero other half
+	mov rbx, 10
+	
+	string_itoa_start:
+	xor rdx, rdx ; zero other half
+	div rbx      ; divide by 10
+
+	add rdx, 0x30
+	mov [rdi+rcx], dl
+	dec rcx
+	cmp rax, 9
+	ja string_itoa_start
+
+	cmp rcx, 0
+	jl string_itoa_done
+	add rax, 0x30 ;last digit
+	mov [rdi+rcx], al
+
+	string_itoa_done:
+	pop rbx
+	pop rcx
+	stackpop
+	ret
+
+string_atoi: ; rdi = string, rax = int
+	stackpush
+	
+	mov r8, 0 ; ;return
+
+	call get_string_length
+	mov r10, rax ; length 
+	cmp rax, 0
+	je string_atoi_ret_empty
+
+	mov r9, 1 ; multiplier
+	
+	dec r10
+	string_atoi_loop:
+	xor rbx, rbx
+	mov bl, BYTE [rdi+r10]
+	sub bl, 0x30   ;get byte, subtract to get real from ascii value
+	mov rax, r9    
+	mul rbx         ; multiply value by multiplier
+	add r8, rax    ; add result to running total
+	dec r10        ; next digit
+	mov rax, 10 ; multiply r9 ( multiplier ) by 10
+	mul r9
+	mov r9, rax
+	cmp r10, -1
+	jne string_atoi_loop
+	jmp string_atoi_ret
+
+	string_atoi_ret_empty:
+	mov rax, -1
+	stackpop
+	ret
+
+	string_atoi_ret:
+	mov rax, r8
+	stackpop
+	ret
 
 string_copy: ; rdi = dest, rsi = source, rdx = bytes to copy
 	stackpush
@@ -22,6 +99,18 @@ string_copy: ; rdi = dest, rsi = source, rdx = bytes to copy
 	inc rcx ; to get null
 	cld
 	rep movsb 
+	stackpop
+	ret
+
+string_concat_int: ;rdi = string being added to, rsi = int to add, ret: new length
+	stackpush
+
+	call get_string_length
+	add rdi, rax
+	call string_itoa
+
+	call get_string_length
+
 	stackpop
 	ret
 
@@ -50,7 +139,7 @@ string_concat: ;rdi = string being added to, rsi = string to add, ret: new lengt
 
 string_contains: ;rdi = haystack, rsi = needle, ret = rax: location of string, else -1
 	stackpush
-
+	
 	xor r10, r10 ; total length from beginning
 	xor r8, r8 ; count from offset
 

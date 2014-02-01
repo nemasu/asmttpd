@@ -12,16 +12,19 @@ Features:
 
 What works:
 * Serving files from specified document root.
+* 200 for < ~10MB files
+* 206 for > ~10MB files. File is split and supports Content-Range header.
 * 404 if file not found.
 * Content-types: xml, html, xhtml, gif, png, jpeg, css, and js.
   
 Planned Features:
 * Directory listing.
   
-Limitations being worked on:
+Current Limitations / Known Issues
 =======
-* Files are not read in chuncks, attempting to tranfer a large file will not work.
-  
+
+* Most clients do not use 206 to recieve large files. Need to improve 200 to continuously stream data.  
+
 Installation
 =======
 
@@ -36,6 +39,11 @@ Usage
 
 Changes
 =======
+2014-02-01 : asmttpd - 0.03
+
+* Files are split if too large to fit into buffer. 
+* Added 206 responses with Content-Range handling
+
 
 2014-01-30 : asmttpd - 0.02
 
