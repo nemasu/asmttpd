@@ -36,7 +36,7 @@ You will need `yasm` installed.
 Usage
 =======
 
-`./asmttpd /path/to/web_root`
+`sudo ./asmttpd /path/to/web_root`
 
 Changes
 =======
