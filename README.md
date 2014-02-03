@@ -36,7 +36,8 @@ You will need `yasm` installed.
 Usage
 =======
 
-`sudo ./asmttpd /path/to/web_root`
+1. Run `sudo ./asmttpd web_root/` in your shell.
+2. Visit `http://localhost/index.html` in your browser.
 
 Changes
 =======
