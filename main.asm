@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.03"
+%define ASMTTPD_VERSION "0.04"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -42,11 +42,12 @@ section .text
 	%include "http.asm"
 	%include "syscall.asm"
 	%include "mutex.asm"
+	;%include "debug.asm"
 
 global  _start
 
 _start:
-
+	
 	mov rdi, start_text
 	mov rsi, start_text_len
 	call print_line
@@ -332,13 +333,6 @@ worker_thread_continue:
 	cmp rax, -1
 	jne worker_thread_206_response 
 
-	;check if its too big. 
-	cmp rdi, 0
-	jle worker_thread_close_file ; todo: probably not the correct way to handle this case
-	cmp rdi, THREAD_BUFFER_SIZE-HEADER_RESERVED_SIZE
-	mov rax, -1 ; set no end range
-	jge worker_thread_206_response ;
-	
 	jmp worker_thread_200_response ;else, we're good to go
 
 	;---------404 Response Start-------------
@@ -508,7 +502,10 @@ worker_thread_continue:
 
 	;---------200 Response Start------------
 	worker_thread_200_response:
-	
+
+	;rdi - total filesize
+	push rdi
+
 	;Seek to beg of file
 	mov rdi, r10 ; fd
 	mov rsi, 0
@@ -517,27 +514,43 @@ worker_thread_continue:
 	;Create Response
 	mov rdi, [rbp-16]
 	mov rsi, r8 ; type, figured out above
+	pop rdx ; total file size
 	call create_http200_response
 
-	mov r8, rax ; size
+	mov r8, rax ; header size
 
-	add rdi, rax ; add length to address
+	worker_thread_200_repsonse_stream:
+	add rdi, r8 ; add length to address
 	mov rsi, rdi
 	mov rdi, r10 ; set fd
 	mov rdx, THREAD_BUFFER_SIZE-HEADER_RESERVED_SIZE
-	sub rdx, rax          ; take out existing length
 	call sys_read
 
+	sub r12, rax
+	
+	cmp r8, 0
+	
+	je worker_thread_200_no_header
 	add r8, rax
+	jmp worker_thread_200_continue
 
+	worker_thread_200_no_header:
+	mov r8, rax
+
+	worker_thread_200_continue:
 	cmp rax, 0
-	jl worker_thread_close_file
+	jle worker_thread_close_file ; if there's nothing left to read, we're done
 
 	;Send response
 	mov rdi, [rbp-8]
 	mov rsi, [rbp-16]
 	mov rdx, r8
 	call sys_send
+	mov r8,	0 ; set no header
+	mov rax, 0 ; header size
+	mov rdi, [rbp-16]
+	cmp r12, 0 ; running total
+	jne worker_thread_200_repsonse_stream
 	
 	;stackpush
 	;push rax

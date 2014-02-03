@@ -17,7 +17,7 @@
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
 
 ;This writes the text after "Content-Type: " at rsi
-detect_content_type: ;rdi - pointer to buffer that contains request, ret - rax: type flag - see create_http200_reponse comments
+detect_content_type: ;rdi - pointer to buffer that contains request, ret - rax: type flag
 	stackpush
 
 	mov rsi, extension_htm
@@ -237,8 +237,10 @@ create_http206_response: ;rdi - pointer, rsi - from, rdx - to, r10 - total r9 - 
 	stackpop
 	ret
 
-create_http200_response: ;rdi - pointer to buffer, rsi - type 
+create_http200_response: ;rdi - pointer to buffer, rsi - type, rdx - length
 	stackpush
+
+	push rdx ; save length
 
 	mov r10, rsi ;type
 	
@@ -253,6 +255,15 @@ create_http200_response: ;rdi - pointer to buffer, rsi - type
 	call string_concat
 
 	mov rsi, range_header
+	call string_concat
+	
+	mov rsi, content_length
+	call string_concat
+
+	pop rsi ; length
+	call string_concat_int
+	
+	mov rsi, crlf
 	call string_concat
 
 	mov rsi, r10
