@@ -29,14 +29,14 @@ Current Limitations / Known Issues
 Installation
 =======
 
-Run make or make release for non-debug version.
+Run `make` or `make release` for non-debug version.
 
-You will need yasm installed.
+You will need `yasm` installed.
 
 Usage
 =======
 
-./asmttpd /path/to/web_root
+`sudo ./asmttpd /path/to/web_root`
 
 Changes
 =======
