@@ -6,7 +6,7 @@ Web server for Linux written in amd64 assembly.
 Note: This is very much a work in progress and not ready for production.
 
 Features:
-* Multi-threaded via a thread pool
+* Multi-threaded
 * No libraries required ( only 64-bit Linux )
 * Fast
 
