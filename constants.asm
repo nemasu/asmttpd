@@ -51,6 +51,9 @@
 %define LSEEK_SET      0 ; seek to offset bytes
 %define LSEEK_END      2 ; seek to end plus offset
 
+%define SOCKOPT_SOL_TCP 6
+%define SOCKOPT_TCP_CORK 3
+
 ;Internal Constants
 %define CONTENT_TYPE_HTML         0
 %define CONTENT_TYPE_OCTET_STREAM 1
@@ -82,3 +85,4 @@
 %define SYS_OPEN		  2 ;const char *pathname, int flags, mode_t mode
 %define SYS_CLOSE		  3 ;unsigned int fd
 %define SYS_SENDFILE     40 ;int out_fd, int in_fd, off_t *offset, size_t count
+%define SYS_SETSOCKOPT   54; int sockfd, int level, int optname,const void *optval, socklen_t optlen
