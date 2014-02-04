@@ -23,7 +23,6 @@ Planned Features:
 
 Current Limitations / Known Issues
 =======
-* 206 Partial Content body is limited to ~10MB, make another request to continue.
 * Implementation of proper HTTP error codes.
 
 Installation
@@ -36,11 +35,17 @@ You will need `yasm` installed.
 Usage
 =======
 
-1. Run `sudo ./asmttpd web_root/` in your shell.
-2. Visit `http://localhost/index.html` in your browser.
+`sudo ./asmttpd /path/to/web_root`
 
 Changes
 =======
+
+2014-02-04 : asmttpd - 0.05
+
+* Changed 200 and 206 implementation to use sendfile system call.
+* Got rid of read/write buffer, changed request read buffer to standard 8KB.
+
+
 2014-02-03 : asmttpd - 0.04
 
 * 200 now streams full amount
