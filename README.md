@@ -39,6 +39,9 @@ Usage
 
 Changes
 =======
+2014-02-04 : asmttpd - 0.06
+
+* Worker thread stack corruption bug fix.
 
 2014-02-04 : asmttpd - 0.05
 
