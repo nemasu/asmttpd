@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.05"
+%define ASMTTPD_VERSION "0.06"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -488,6 +488,7 @@ worker_thread_continue:
 	mov rdi, [rbp-16]
 	mov rsi, r8 ; type, figured out above
 	pop rdx ; total file size
+	push rdx ; save for sendfile
 	call create_http200_response
 
 	mov r8, rax ; header size
