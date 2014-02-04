@@ -16,5 +16,5 @@
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
     
-    printbuffer:   resb 1024
+    ;printbuffer:   resb 1024
     listen_socket: resq 1
