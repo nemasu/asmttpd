@@ -18,6 +18,32 @@
 
 section .text
 
+sys_cork:;rdi - socket
+	stackpush
+	mov QWORD [rbp-24], 1
+	mov r8, 8        ;sizeof int
+	mov r10, rbp
+	sub r10, 24      ;pointer to 1
+	mov rdx, SOCKOPT_TCP_CORK
+	mov rsi, SOCKOPT_SOL_TCP 
+	mov rax, SYS_SETSOCKOPT
+	syscall
+	stackpop
+	ret
+
+sys_uncork;rdi - socket
+	stackpush
+	mov QWORD [rbp-24], 0
+	mov r8, 8        ;sizeof int
+	mov r10, rbp
+	sub r10, 24  ;pointer to 1
+	mov rdx, SOCKOPT_TCP_CORK
+	mov rsi, SOCKOPT_SOL_TCP 
+	mov rax, SYS_SETSOCKOPT
+	syscall
+	stackpop
+	ret
+
 sys_sendfile: ;rdi - outfd, rsi - infd, rdx - file size
 	stackpush
 	mov r10, rdx

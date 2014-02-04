@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.07"
+%define ASMTTPD_VERSION "0.08"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -128,7 +128,7 @@ main_thread:
 worker_thread:
 	
 	mov rbp, rsp
-	sub rsp, 16
+	sub rsp, 24
 	mov QWORD [rbp-16], 0 ; Used for pointer to recieve buffer
 
 	mov rdi, THREAD_BUFFER_SIZE
@@ -141,6 +141,9 @@ worker_thread_start:
 
 	mov [rbp-8], rax ; save fd
 	
+	mov rdi, rax
+	call sys_cork ; cork it
+
 worker_thread_continue:
 	
 	;HTTP Stuff starts here
@@ -336,7 +339,7 @@ worker_thread_continue:
     create_http206_response_lbeg:
     inc rdi
 	inc rax
-	cmp rax, 1000 ; todo tweak this number
+	cmp rax, 200 ; todo tweak this number
 	jge worker_thread_close_file
     cmp BYTE [rdi], 0x2D ; look for '-'
     jne create_http206_response_lbeg
@@ -454,6 +457,10 @@ worker_thread_continue:
 	;---------200 Response End--------------
 
 	worker_thread_close_file:
+	;Uncork
+	mov rdi, [rbp-8]
+	call sys_uncork
+	
 	;Close File
 	mov rdi, r10
 	call sys_close
