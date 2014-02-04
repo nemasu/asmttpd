@@ -39,6 +39,10 @@ Usage
 
 Changes
 =======
+2014-02-04 : asmttpd - 0.07
+
+* Removed thread pool after benchmarking, changed to an accept-per-thread model.
+
 2014-02-04 : asmttpd - 0.06
 
 * Worker thread stack corruption bug fix.

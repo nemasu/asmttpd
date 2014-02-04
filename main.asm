@@ -19,13 +19,11 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.06"
+%define ASMTTPD_VERSION "0.07"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
-; Worker thread count should reflect the amount of RAM you have
-; eg. 2GB of RAM available to daemon with THREAD_BUFFER_SIZE at 11534336(11MB) = ~180 threads
-%define THREAD_POOL_SIZE 100 ; Number of worker threads
+%define THREAD_COUNT 10 ; Number of worker threads
 
 ;Follwing amd64 syscall standards for internal function calls: rdi rsi rdx r10 r8 r9
 section .data
@@ -41,7 +39,7 @@ section .text
 	%include "string.asm"
 	%include "http.asm"
 	%include "syscall.asm"
-	%include "mutex.asm"
+	;%include "mutex.asm"
 	;%include "debug.asm"
 
 global  _start
@@ -82,19 +80,6 @@ _start:
 	mov rax, SYS_RT_SIGACTION
 	syscall
 
-		
-	;Create queue for thread pool.
-	mov rdi, QUEUE_SIZE
-	call sys_mmap_mem
-	cmp rax, -1
-	je exit
-	mov [queue_min], rax
-	mov [queue_start], rax
-	mov [queue_end], rax
-	
-	add rax, QUEUE_SIZE
-	mov [queue_max], rax
-
 	;Try opening directory
 	mov rdi, [directory_path]
 	call sys_open_directory
@@ -116,8 +101,8 @@ _start:
 	;Start listening
 	call sys_listen
 
-	;Create threads for thread pool
-	mov r10, THREAD_POOL_SIZE
+	;Create threads
+	mov r10, THREAD_COUNT
 	
 	thread_pool_setup:
 	push r10
@@ -135,26 +120,8 @@ _start:
 main_thread:
 	
 
-	call sys_accept
-	;check ret fav
-	mov rdi, rax
-	cmp rdi, 0
-	jl main_thread
-
-	call mutex_enter
-	
-	;add fd to queue
-	mov rsi, [queue_end]
-	mov [rsi], rdi
-
-	;Adjust end pointer
-	mov rdi, [queue_end]
-	inc rdi
-	mov [queue_end], rdi
-	
-	call mutex_leave
-
-	call sys_trigger_signal
+	mov rdi, 10
+	call sys_sleep
 
 	jmp main_thread
 
@@ -168,35 +135,14 @@ worker_thread:
 	call sys_mmap_mem
 	mov QWORD [rbp-16], rax
 
-	mov QWORD [rbp-8], 0x00    ; used for socket fd, when we get one.
-
 worker_thread_start:
 
-	call sys_wait_for_signal
+	call sys_accept
 
-	call mutex_enter
-	mov rdi, QWORD [queue_start]
-	mov rsi, QWORD [queue_end]
-	cmp rdi, rsi
-	jne worker_thread_continue
-
-	call mutex_leave
+	mov [rbp-8], rax ; save fd
 	
-	
-	jmp worker_thread_start
-
 worker_thread_continue:
 	
-	mov rdi, [rdi]
-	mov [rbp-8], rdi ; save fd
-
-	;fiddle with queue, currently pops it off the end ... oh well.
-	mov rdi, [queue_end]
-	dec rdi
-	mov [queue_end], rdi
-
-	call mutex_leave
-
 	;HTTP Stuff starts here
 	mov rdi, QWORD [rbp-8] ;fd
 	mov rsi, [rbp-16]      ;buffer
@@ -253,7 +199,6 @@ worker_thread_continue:
 	add r9, r8  ;end offset
 
 	;TODO: Assuming it's a file, need directory handling too
-	;Also, we're going to try and read the whole thing, needs to be chunked.
 	
 	mov rdi, [rbp-16]
 	add rdi, r11 ; end of buffer, lets use it!

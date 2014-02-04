@@ -44,13 +44,6 @@ sys_lseek:; rdi - fd, rsi - offset
 	stackpop
 	ret
 
-;sys_read:
-;	stackpush
-;	mov rax, SYS_READ
-;	syscall
-;	stackpop
-;	ret
-
 sys_open:
 	stackpush
 	mov rsi, OPEN_RDONLY ;flags 	
@@ -82,32 +75,6 @@ sys_recv:
 	xor r8, r8
 	xor r9, r9
 	mov rax, SYS_RECVFROM
-	syscall
-	stackpop
-	ret
-
-sys_wait_for_signal:
-	stackpush
-	xor r10, r10
-	xor r8, r8
-	xor r9, r9
-	mov rdx, 0 ;value
-	mov rsi, FUTEX_WAIT
-	mov rdi, signal_futex
-	mov rax, SYS_FUTEX
-	syscall
-	stackpop
-	ret
-
-sys_trigger_signal:
-	stackpush
-	xor r10, r10
-	xor r8, r8
-	xor r9, r9
-	mov rdx, 1 ;value
-	mov rsi, FUTEX_WAKE
-	mov rdi, signal_futex
-	mov rax, SYS_FUTEX
 	syscall
 	stackpop
 	ret
@@ -155,32 +122,6 @@ sys_open_directory:;rdi = path, rax = ret ( fd )
 	stackpush
 	mov rsi, OPEN_DIRECTORY | OPEN_RDONLY ;flags 
 	mov rax, SYS_OPEN
-	syscall
-	stackpop
-	ret
-
-sys_futex_wait:
-	stackpush
-	xor r10, r10
-	xor r8, r8
-	xor r9, r9
-	mov rdx, rdi ;value
-	mov rsi, FUTEX_WAIT
-	mov rdi, queue_futex
-	mov rax, SYS_FUTEX
-	syscall
-	stackpop
-	ret
-
-sys_futex_wake:
-	stackpush
-	xor r10, r10
-	xor r8, r8
-	xor r9, r9
-	mov rdx, rdi ;value
-	mov rsi, FUTEX_WAKE
-	mov rdi, queue_futex
-	mov rax, SYS_FUTEX
 	syscall
 	stackpop
 	ret

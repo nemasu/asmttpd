@@ -29,13 +29,7 @@
 		sa_flags    dq SA_RESTORER ; also dq, because padding
 		sa_restorer dq 0
 		sa_mask     dq 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	queue_futex dq 0
-	queue_min dq 0
-	queue_max dq 0
-	queue_start dq 0
-	queue_end   dq 0
-	signal_futex dq 0
-
+	
 	;Strings
 	in_enter db "In Enter:",0x00
 	in_enter_len equ $ - in_enter

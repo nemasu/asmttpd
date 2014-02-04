@@ -25,8 +25,6 @@
 %define SIGQUIT     3 ;Quit (POSIX).
 %define SIGTERM     15; Default kill signal
 %define SA_RESTORER 0x04000000 ;Required for x86_64 sigaction
-%define FUTEX_WAIT  0
-%define FUTEX_WAKE  1
 %define QUEUE_SIZE 40960            ; in bytes, 40960 is about 5120 fds.
 %define THREAD_BUFFER_SIZE 8192 ; 8KB recv buffer
 
@@ -65,7 +63,6 @@
 %define CONTENT_TYPE_JPEG	      8
 
 ;System Call Values
-%define SYS_READ  0  ;int fd, const void *buf, size_t count
 %define SYS_WRITE 1  ;int fd, const void *buf, size_t count
 %define SYS_LSEEK 8  ;int fd, off_t offset, int whence
 %define SYS_MMAP  9  ;void *addr, size_t length, int prot, int flags, int fd, off_t offset
@@ -74,7 +71,6 @@
 %define SYS_EXIT_GROUP 231  ;int status
 %define SYS_NANOSLEEP 35    ;const struct timespec *req, struct timespec *rem
 %define SYS_RT_SIGACTION 13 ;int sig,const struct sigaction __user * act,struct sigaction __user * oact,size_t sigsetsize
-%define SYS_FUTEX        202;int *uaddr, int op, int val, const struct timespec *timeout, int *uaddr2, int val3
 %define SYS_SOCKET       41 ;int domain, int type, int protocol
 %define SYS_ACCEPT       43 ;int sockfd, struct sockaddr *addr, socklen_t *addrlen
 %define SYS_SENDTO       44 ;int sockfd, const void *buf, size_t len, int flags, ...
