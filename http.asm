@@ -251,8 +251,8 @@ create_http200_response: ;rdi - pointer to buffer, rsi - type, rdx - length
 	mov rsi, server_header
 	call string_concat
 
-	mov rsi, connection_header
-	call string_concat
+	;mov rsi, connection_header
+	;call string_concat
 
 	mov rsi, range_header
 	call string_concat

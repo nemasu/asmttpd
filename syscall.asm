@@ -18,6 +18,15 @@
 
 section .text
 
+sys_sendfile: ;rdi - outfd, rsi - infd, rdx - file size
+	stackpush
+	mov r10, rdx
+	xor rdx, rdx
+	mov rax, SYS_SENDFILE
+	syscall
+	stackpop
+	ret
+
 sys_get_file_size: ;rdi - fd, rax - size
 	stackpush
 	xor rsi, rsi
@@ -35,12 +44,12 @@ sys_lseek:; rdi - fd, rsi - offset
 	stackpop
 	ret
 
-sys_read:
-	stackpush
-	mov rax, SYS_READ
-	syscall
-	stackpop
-	ret
+;sys_read:
+;	stackpush
+;	mov rax, SYS_READ
+;	syscall
+;	stackpop
+;	ret
 
 sys_open:
 	stackpush

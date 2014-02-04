@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.04"
+%define ASMTTPD_VERSION "0.05"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -221,6 +221,14 @@ worker_thread_continue:
 	add rdi, r11
 	mov BYTE [rdi], 0x00
 
+	;Make sure its a valid request
+	mov rdi, [rbp-16]
+	mov rsi, crlfx2
+	call string_ends_with
+	cmp rax, 1
+	jne worker_thread_close ; todo return 400
+
+
 	;Find request
 	mov rax, 0x2F ; '/' character
 	mov rdi, [rbp-16] ;scan buffer
@@ -355,23 +363,24 @@ worker_thread_continue:
 	;---------206 Response Start------------
 	worker_thread_206_response:
 	; r8: content type , r10: fd, rax: Range: start
+	
 	push r10
 	push r8
 
 	mov r8, rdi ; r8 now size
 	
-	cmp rax, -1
-	je worker_thread_206_no_bytes_search_cont
-	
+	;Seek to beg of file
+	mov rdi, r10 ; fd
+	mov rsi, 0
+	call sys_lseek
+
 	; find 'bytes='
     mov rdi, [rbp-16]
 	add rdi, rax
-    push rsi
     mov rsi, find_bytes_range
     call string_contains
-    pop rsi
     cmp rax, -1
-    je worker_thread_206_no_bytes_search_cont
+    je worker_thread_close_file ; todo: send 400 response
 
     add rdi, rax
     add rdi, 6 ; go to number
@@ -411,80 +420,45 @@ worker_thread_continue:
 
     mov rcx,rax ; rcx: to byte range, -1 if there is no end
 	;byte range: rbx -> rcx(-1 if to end)
-	jmp worker_thread_206_bytes_cont
 
-	worker_thread_206_no_bytes_search_cont:
-	; for no bytes entry, but is too big to fit
-	mov rbx, 0
-	mov rcx, -1 ; just go from 0 to as much as possible
 
-	worker_thread_206_bytes_cont:
-	
-	mov r9, THREAD_BUFFER_SIZE-HEADER_RESERVED_SIZE
-	
 	cmp rcx, -1
-	jne skip_end_range_update
-	;Update end
-	;max end is THREAD_BUFFER_SIZE minus HEADER_RESERVED_SIZE
-	;if file is smaller, then awesome, else make it that size
-	
+	jne worker_thread_206_skip_unknown_end
 	mov rcx, r8
 	dec rcx ; zero based
-	cmp rcx, r9
-	jl skip_end_range_update ; if it fits, awesome
-	mov rcx, r9
-	dec rcx ; zero based...doesn't really matter in this case though
+	worker_thread_206_skip_unknown_end:
 
-	skip_end_range_update:
-
-	mov rax, rcx
-	inc rax
-	sub rax, rbx
-	cmp rax, r9
-	jg worker_thread_close_file ; todo return 416
+	cmp rcx, r8
+	jg worker_thread_close_file ; todo: change to 413 response
 
 	cmp rbx, rcx
-	jg worker_thread_close_file ; todo return 416
+	jg worker_thread_close_file ; todo: change to 416 response
 
-	inc rcx ; take into acount zero based 'to'
-	
-	cmp rcx, r8
-	jg worker_thread_close_file ; todo: return 413
-	dec rcx
 
-	inc rbx
-	cmp rbx, r8
-	jg worker_thread_close_file ; todo: return 416
-	dec rbx
-
-	mov rdi, r8 ; total filesize
-	pop r9  ; type
-	push r10; still need fd
-
-	mov r10, rdi  ;total
+	pop r9 ; type
+	mov r10, r8  ;total
 	mov rdi, [rbp-16]
 	mov rsi, rbx ;from
 	mov rdx, rcx ;to
 	call create_http206_response
 	mov r9, rax ; r9: header size
 
-	pop rdi ; pop fd
-	;rsi already has offset, or 'from'
-	call sys_lseek
-	
-	sub rdx, rsi ; read to - from + 1
-	inc rdx
-
-	mov rsi, [rbp-16]
-	add rsi, r9
-	call sys_read
-	add r9, rax ; add to read bytes the header size(r9)
 
 	;Send it
 	mov rdi, [rbp-8]
 	mov rsi, [rbp-16]
 	mov rdx, r9
 	call sys_send
+	
+	pop rdi ; fd
+	push rdi ; save it so we can close it
+	mov rsi, rbx
+	call sys_lseek
+
+	mov rsi, rdi
+	mov rdx, r8 ; size
+	mov rdi, [rbp-8]
+	call sys_sendfile
 
 	;stackpush
 	;push rax
@@ -493,9 +467,8 @@ worker_thread_continue:
 	;call print_line ; debug
 	;pop rax
 	;stackpop
-
-	pop r10 ; restore fd
 	
+    pop r10; restore fd for close	
 	jmp worker_thread_close_file
 	;---------206 Response End--------------
 
@@ -519,48 +492,19 @@ worker_thread_continue:
 
 	mov r8, rax ; header size
 
-	worker_thread_200_repsonse_stream:
-	add rdi, r8 ; add length to address
-	mov rsi, rdi
-	mov rdi, r10 ; set fd
-	mov rdx, THREAD_BUFFER_SIZE-HEADER_RESERVED_SIZE
-	call sys_read
-
-	sub r12, rax
-	
-	cmp r8, 0
-	
-	je worker_thread_200_no_header
-	add r8, rax
-	jmp worker_thread_200_continue
-
-	worker_thread_200_no_header:
-	mov r8, rax
-
-	worker_thread_200_continue:
-	cmp rax, 0
-	jle worker_thread_close_file ; if there's nothing left to read, we're done
-
-	;Send response
 	mov rdi, [rbp-8]
 	mov rsi, [rbp-16]
-	mov rdx, r8
+	mov rdx, rax
 	call sys_send
-	mov r8,	0 ; set no header
-	mov rax, 0 ; header size
-	mov rdi, [rbp-16]
-	cmp r12, 0 ; running total
-	jne worker_thread_200_repsonse_stream
-	
-	;stackpush
-	;push rax
-	;mov rdi, rsi
-	;mov rsi, r8
-	;call print_line ; debug
-	;pop rax
-	;stackpop
 
-	
+	cmp rax, 0
+	jle worker_thread_close_file
+
+	mov rdi, [rbp-8]
+	mov rsi, r10
+	pop rdx
+	call sys_sendfile
+
 	;---------200 Response End--------------
 
 	worker_thread_close_file:
