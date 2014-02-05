@@ -1,4 +1,4 @@
-;esmttpd - Web server for Linux written in amd64 assembly.
+;asmttpd - Web server for Linux written in amd64 assembly.
 ;Copyright (C) 2014  nemasu <nemasu@gmail.com>
 ;
 ;This file is part of asmttpd.
