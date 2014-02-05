@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.08"
+%define ASMTTPD_VERSION "0.09"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -129,9 +129,11 @@ worker_thread:
 	
 	mov rbp, rsp
 	sub rsp, 24
+	;Offsets: 8 - socket fd, 16 - buffer, 24 - int used in tcp corking
+
 	mov QWORD [rbp-16], 0 ; Used for pointer to recieve buffer
 
-	mov rdi, THREAD_BUFFER_SIZE
+	mov rdi, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT ; Allow room to append null, and to create path
 	call sys_mmap_mem
 	mov QWORD [rbp-16], rax
 
@@ -155,6 +157,8 @@ worker_thread_continue:
 	cmp rax, 0
 	jle worker_thread_close
 
+	mov r11, rax ; save original received length
+	
 	;stackpush
 	;push rax
 	;mov rdi, rsi
@@ -163,19 +167,17 @@ worker_thread_continue:
 	;pop rax
 	;stackpop
 	
-	; add null and save length
-	mov r11, rax ; save original received length
-	inc r11
-	mov rdi, [rbp-16]
-	add rdi, r11
-	mov BYTE [rdi], 0x00
-
 	;Make sure its a valid request
 	mov rdi, [rbp-16]
 	mov rsi, crlfx2
 	call string_ends_with
 	cmp rax, 1
 	jne worker_thread_close ; todo return 400
+
+	; add null
+	inc r11
+	add rdi, r11
+	mov BYTE [rdi], 0x00
 
 
 	;Find request
@@ -208,12 +210,16 @@ worker_thread_continue:
 	mov r12, r11 ; keeping count
 
 	mov rsi, [directory_path]
+ 	xor r15, r15 ; Make sure directory path does not exceed DIRECTORY_LENGTH_LIMIT
 
 	worker_thread_append_directory_path:
+	inc r15
+	cmp r15, DIRECTORY_LENGTH_LIMIT
+	je worker_thread_close ; todo error 400
 	lodsb
 	stosb
 	inc r12
-	cmp rax, 0x00
+	cmp al, 0x00
 	jne worker_thread_append_directory_path
 
 	dec r12 ; get rid of 0x00
@@ -225,6 +231,8 @@ worker_thread_continue:
 	add rdi, r12 ;go to end of buffer
 	mov rcx, r9
 	sub rcx, r8
+	cmp rcx, URL_LENGTH_LIMIT ; Make sure this does not exceed URL_PATH_LENGTH
+	jg worker_thread_close ; todo error 400
 	add r12, rcx
 	rep movsb
 

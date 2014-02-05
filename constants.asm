@@ -27,6 +27,8 @@
 %define SA_RESTORER 0x04000000 ;Required for x86_64 sigaction
 %define QUEUE_SIZE 40960            ; in bytes, 40960 is about 5120 fds.
 %define THREAD_BUFFER_SIZE 8192 ; 8KB recv buffer
+%define URL_LENGTH_LIMIT 2000
+%define DIRECTORY_LENGTH_LIMIT 100
 
 ;Flags
 %define MMAP_PROT_READ     0x1
