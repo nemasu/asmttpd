@@ -39,6 +39,10 @@ Usage
 
 Changes
 =======
+2014-02-05 : asmttpd - 0.09
+
+* Issue #8 fix. Crashes on long request paths.
+
 2014-02-04 : asmttpd - 0.08
 
 * Added TCP corking.
