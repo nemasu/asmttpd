@@ -23,7 +23,9 @@
 %define SIGHUP      1 ;Hangup (POSIX).
 %define SIGINT      2 ;Interrupt (ANSI).
 %define SIGQUIT     3 ;Quit (POSIX).
+%define SIGPIPE     13;broken pipe
 %define SIGTERM     15; Default kill signal
+%define SIGIGN      1;Ignore signal
 %define SA_RESTORER 0x04000000 ;Required for x86_64 sigaction
 %define QUEUE_SIZE 40960            ; in bytes, 40960 is about 5120 fds.
 %define THREAD_BUFFER_SIZE 8192 ; 8KB recv buffer

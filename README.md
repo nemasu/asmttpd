@@ -39,6 +39,13 @@ Usage
 
 Changes
 =======
+2014-02-06 : asmttpd - 0.1
+
+* Fixed SIGPIPE when transfer is cancelled.
+* Added a more useful error on bind failure.
+* Fixed 206 size calculation.
+* Combined seek & get file size system calls.
+
 2014-02-05 : asmttpd - 0.09
 
 * Issue #8 fix. Crashes on long request paths.

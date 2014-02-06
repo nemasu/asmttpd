@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.09"
+%define ASMTTPD_VERSION "0.1"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -70,8 +70,7 @@ _start:
 	; Register signal handlers ( just close all other threads by jumping to SYS_EXIT_GROUP )
 	mov r10, 8 ; sizeof(sigset_t) displays 128, but strace shows 8 ... so 8 it is! -_-
 	xor rdx, rdx
-	mov rax, exit
-	mov [sa_handler], rax
+	mov QWORD [sa_handler], exit
 	mov rsi, sigaction
 	mov rdi, SIGINT
 	mov rax, SYS_RT_SIGACTION
@@ -79,6 +78,11 @@ _start:
 	mov rdi, SIGTERM
 	mov rax, SYS_RT_SIGACTION
 	syscall
+	mov QWORD [sa_handler], SIGIGN
+	mov rdi, SIGPIPE
+	mov rax, SYS_RT_SIGACTION
+	syscall
+	
 
 	;Try opening directory
 	mov rdi, [directory_path]
@@ -96,7 +100,7 @@ _start:
 	;Bind to port 80
 	call sys_bind_server
 	cmp rax, 0
-	jl exit_error
+	jl exit_bind_error
 	
 	;Start listening
 	call sys_listen
@@ -285,7 +289,9 @@ worker_thread_continue:
 	;Determine if request requires a 206 response
 	
 	mov rdi, r10 ; fd
-	call sys_get_file_size
+	xor rsi, rsi
+	mov rdx, LSEEK_END
+	call sys_lseek
 	push rax
 
 	;Basically if "Range:" is in the header	
@@ -328,6 +334,7 @@ worker_thread_continue:
 	;Seek to beg of file
 	mov rdi, r10 ; fd
 	mov rsi, 0
+	mov rdx, LSEEK_SET
 	call sys_lseek
 
 	; find 'bytes='
@@ -395,10 +402,14 @@ worker_thread_continue:
 	mov r10, r8  ;total
 	mov rdi, [rbp-16]
 	mov rsi, rbx ;from
+	mov r13, rsi ; r13: from offset
 	mov rdx, rcx ;to
+	mov r12, rcx ; r12: to byte range
 	call create_http206_response
 	mov r9, rax ; r9: header size
 
+	sub r12, r13 ; r12: amount to send
+	inc r12; zero based
 
 	;Send it
 	mov rdi, [rbp-8]
@@ -406,13 +417,16 @@ worker_thread_continue:
 	mov rdx, r9
 	call sys_send
 	
-	pop rdi ; fd
+	pop rdi ; sock fd - stack is empty now
 	push rdi ; save it so we can close it
-	mov rsi, rbx
+
+	mov rsi, r13 ; file offset ( range 'from' )
+	mov rdx, LSEEK_SET
 	call sys_lseek
 
+
+	mov rdx, r12 ;file size to send
 	mov rsi, rdi
-	mov rdx, r8 ; size
 	mov rdi, [rbp-8]
 	call sys_sendfile
 
@@ -438,6 +452,7 @@ worker_thread_continue:
 	;Seek to beg of file
 	mov rdi, r10 ; fd
 	mov rsi, 0
+	mov rdx, LSEEK_SET
 	call sys_lseek
 	
 	;Create Response
@@ -495,6 +510,16 @@ exit_with_help:
 exit_error:
 	mov rdi, msg_error
 	mov rsi, msg_error_len
+	call print_line
+
+	mov rdi, -1
+	mov rax, SYS_EXIT_GROUP
+	syscall
+	jmp exit
+
+exit_bind_error:
+	mov rdi, msg_bind_error
+	mov rsi, msg_bind_error_len
 	call print_line
 
 	mov rdi, -1
