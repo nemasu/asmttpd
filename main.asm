@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.1"
+%define ASMTTPD_VERSION "0.1.1"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -248,16 +248,16 @@ worker_thread_continue:
 	mov r9, r11 ; saving offset into a stack saved register
 	; [rbp-16] + r9 now holds string for file opening
 
-	; Simple request logging
-	mov rdi, msg_request_log
-	mov rsi, msg_request_log_len
-	call sys_write
-	mov rdi, [rbp-16]
-	add rdi, r9
-	call get_string_length
-	mov rsi, rax
-	call print_line
-	;-----Simple logging
+	;-----Simple request logging
+	;mov rdi, msg_request_log
+	;mov rsi, msg_request_log_len
+	;call sys_write
+	;mov rdi, [rbp-16]
+	;add rdi, r9
+	;call get_string_length
+	;mov rsi, rax
+	;call print_line
+	;-----End Simple logging
 	
 	worker_thread_remove_pre_dir:
 	mov rdi, [rbp-16]
@@ -392,7 +392,7 @@ worker_thread_continue:
 	worker_thread_206_skip_unknown_end:
 
 	cmp rcx, r8
-	jg worker_thread_close_file ; todo: change to 413 response
+	jge worker_thread_close_file ; todo: change to 413 response
 
 	cmp rbx, rcx
 	jg worker_thread_close_file ; todo: change to 416 response

@@ -39,6 +39,11 @@ Usage
 
 Changes
 =======
+2014-02-07 : asmttpd - 0.1.1
+
+* Fixed 206 max length bug.
+* Commented out simple request logging, uncomment in main.asm to enable.
+
 2014-02-06 : asmttpd - 0.1
 
 * Fixed SIGPIPE when transfer is cancelled.
