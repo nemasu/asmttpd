@@ -12,9 +12,7 @@ Features:
 
 What works:
 * Serving files from specified document root.
-* 200
-* 206 
-* 404 
+* 200, 206, 404, 400, 413, 416
 * Content-types: xml, html, xhtml, gif, png, jpeg, css, js, and octet-stream.
   
 Planned Features:
@@ -39,6 +37,11 @@ Usage
 
 Changes
 =======
+2014-02-10 : asmttpd - 0.2
+
+* Added 400, 413, 416 responses.
+* Fixed header processing bug.
+
 2014-02-07 : asmttpd - 0.1.1
 
 * Fixed 206 max length bug.
@@ -71,7 +74,6 @@ Changes
 
 * Changed 200 and 206 implementation to use sendfile system call.
 * Got rid of read/write buffer, changed request read buffer to standard 8KB.
-
 
 2014-02-03 : asmttpd - 0.04
 

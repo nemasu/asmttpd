@@ -243,7 +243,8 @@ string_ends_with:;rdi = haystack, rsi = needle, ret = rax: 0 false, 1 true
 	add rdi, r8
 	add rsi, r10
 
-	mov rax, 0
+	xor rax, rax
+	xor rdx, rdx
 	
 	string_ends_with_loop:
 	;Start from end, dec r10 till 0
@@ -286,13 +287,15 @@ print_line: ; rdi = pointer, rsi = length
 
 get_string_length: ; rdi = pointer, ret rax
 	stackpush
-	mov rax, -1
-	dec rdi
+	cld
+	mov r10, -1
+	mov rsi, rdi
 get_string_length_start:
-	inc rdi
-	inc rax
-	cmp BYTE [rdi], 0x0
+	inc r10 
+	lodsb
+	cmp al, 0x00
 	jne get_string_length_start
+	mov rax, r10
 	stackpop
 	ret
 
