@@ -162,7 +162,49 @@ add_content_type_header: ;rdi - pointer to buffer, rsi - type
 	add_response_cont:
 	stackpop
 	ret
+
+create_httpError_response: ;rdi - pointer, rsi - error code: 400, 416, 413
+	stackpush
+
+	cmp rsi, 416
+	je create_httpError_response_416
+	cmp rsi, 413
+	je create_httpError_response_413
 	
+	;garbage/default is 400
+	mov rsi, http_400
+	mov rdx, http_400_len
+	call string_copy
+	jmp create_httpError_response_cont
+
+	create_httpError_response_416:
+	mov rsi, http_416
+	mov rdx, http_416_len
+	call string_copy
+	jmp create_httpError_response_cont
+
+	create_httpError_response_413:
+ 	mov rsi, http_413
+	mov rdx, http_413_len
+	call string_copy
+	jmp create_httpError_response_cont
+	
+	create_httpError_response_cont:
+	mov rsi, server_header
+	call string_concat
+
+	mov rsi, connection_header
+	call string_concat
+
+	mov rsi, crlfx2
+    call string_concat
+
+	call get_string_length
+
+	stackpop
+	ret
+	
+
 create_http206_response: ;rdi - pointer, rsi - from, rdx - to, r10 - total r9 - type
 					     ; looks like Content-Length: `rdx subtract rsi add 1`
 						 ;            Content-Range: bytes rsi-rdx/r10

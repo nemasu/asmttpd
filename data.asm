@@ -70,8 +70,6 @@
 	char_hyphen db "-",0x00
 
 	;HTTP
-	;need 413-toolarge 416-rangesucks
-	
 	http_200 db "HTTP/1.1 200 OK",0x0d,0x0a,0x00
 	http_200_len equ $ - http_200
 	http_206 db "HTTP/1.1 206 Partial Content",0x0d,0x0a,0x00
@@ -80,6 +78,13 @@
 	http_404_len equ $ - http_404
 	http_404_text db "I'm sorry, Dave. I'm afraid I can't do that. 404 Not Found",0x00
 	http_404_text_len equ $ - http_404_text_len
+	http_400 db "HTTP/1.1 400 Bad Request",0x0d,0x0a,0x00
+	http_400_len equ $ - http_400
+	http_413 db "HTTP/1.1 413 Request Entity Too Large",0x0d,0x0a,0x00
+	http_413_len equ $ - http_413
+	http_416 db "HTTP/1.1 416 Requested Range Not Satisfiable",0x0d,0x0a,0x00
+	http_416_len equ $ - http_416
+
 	server_header db     "Server: asmttpd/",ASMTTPD_VERSION,0x0d,0x0a,0x00
 	server_header_len equ $ - server_header
 	

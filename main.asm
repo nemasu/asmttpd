@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.1.1"
+%define ASMTTPD_VERSION "0.2"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -161,7 +161,7 @@ worker_thread_continue:
 	cmp rax, 0
 	jle worker_thread_close
 
-	mov r11, rax ; save original received length
+	push rax ; save original received length
 	
 	;stackpush
 	;push rax
@@ -170,19 +170,18 @@ worker_thread_continue:
 	;call print_line ; debug
 	;pop rax
 	;stackpop
-	
+
+	; add null
+	mov rdi, [rbp-16]
+	add rdi, rax
+	mov BYTE [rdi], 0x00
+
 	;Make sure its a valid request
 	mov rdi, [rbp-16]
 	mov rsi, crlfx2
 	call string_ends_with
 	cmp rax, 1
-	jne worker_thread_close ; todo return 400
-
-	; add null
-	inc r11
-	add rdi, r11
-	mov BYTE [rdi], 0x00
-
+	jne worker_thread_400_repsonse
 
 	;Find request
 	mov rax, 0x2F ; '/' character
@@ -190,7 +189,7 @@ worker_thread_continue:
 	mov rcx, -1         ;Start count
 	cld               ;Increment rdi
 	repne scasb
-	jne worker_thread_close ;TODO: change to 400 error
+	jne worker_thread_400_repsonse
 	mov rax, -2
 	sub rax, rcx      ;Get the length
 
@@ -201,7 +200,7 @@ worker_thread_continue:
 	mov rcx, -1
 	cld
 	repne scasb
-	jne worker_thread_close ;TODO change to 400 error
+	jne worker_thread_400_repsonse
 	mov rax, -1
 	sub rax, rcx
 	mov r9, rax
@@ -209,6 +208,7 @@ worker_thread_continue:
 
 	;TODO: Assuming it's a file, need directory handling too
 	
+	pop r11 ; restore orig recvd length
 	mov rdi, [rbp-16]
 	add rdi, r11 ; end of buffer, lets use it!
 	mov r12, r11 ; keeping count
@@ -219,7 +219,7 @@ worker_thread_continue:
 	worker_thread_append_directory_path:
 	inc r15
 	cmp r15, DIRECTORY_LENGTH_LIMIT
-	je worker_thread_close ; todo error 400
+	je worker_thread_400_repsonse
 	lodsb
 	stosb
 	inc r12
@@ -236,7 +236,7 @@ worker_thread_continue:
 	mov rcx, r9
 	sub rcx, r8
 	cmp rcx, URL_LENGTH_LIMIT ; Make sure this does not exceed URL_PATH_LENGTH
-	jg worker_thread_close ; todo error 400
+	jg worker_thread_400_repsonse
 	add r12, rcx
 	rep movsb
 
@@ -343,7 +343,7 @@ worker_thread_continue:
     mov rsi, find_bytes_range
     call string_contains
     cmp rax, -1
-    je worker_thread_close_file ; todo: send 400 response
+    je worker_thread_400_repsonse
 
     add rdi, rax
     add rdi, 6 ; go to number
@@ -392,11 +392,10 @@ worker_thread_continue:
 	worker_thread_206_skip_unknown_end:
 
 	cmp rcx, r8
-	jge worker_thread_close_file ; todo: change to 413 response
+	jge worker_thread_413_repsonse
 
 	cmp rbx, rcx
-	jg worker_thread_close_file ; todo: change to 416 response
-
+	jg worker_thread_416_repsonse
 
 	pop r9 ; type
 	mov r10, r8  ;total
@@ -476,8 +475,50 @@ worker_thread_continue:
 	mov rsi, r10
 	pop rdx
 	call sys_sendfile
-
+	jmp worker_thread_close_file
 	;---------200 Response End--------------
+
+	;---------400 Response Start------------
+	worker_thread_400_repsonse:
+	mov rdi, [rbp-16]
+	mov rsi, 400
+	call create_httpError_response
+
+	mov rdi, [rbp-8]
+	mov rsi, [rbp-16]
+	mov rdx, rax
+	call sys_send
+
+	jmp worker_thread_close
+	;---------400 Response End--------------
+	
+	;---------413 Response Start------------
+	worker_thread_413_repsonse:
+	mov rdi, [rbp-16]
+	mov rsi, 413
+	call create_httpError_response
+
+	mov rdi, [rbp-8]
+	mov rsi, [rbp-16]
+	mov rdx, rax
+	call sys_send
+
+	jmp worker_thread_close
+	;---------413 Response End--------------
+	
+	;---------416 Response Start------------
+	worker_thread_416_repsonse:
+	mov rdi, [rbp-16]
+	mov rsi, 416
+	call create_httpError_response
+
+	mov rdi, [rbp-8]
+	mov rsi, [rbp-16]
+	mov rdx, rax
+	call sys_send
+
+	jmp worker_thread_close
+	;---------416 Response End--------------
 
 	worker_thread_close_file:
 	;Uncork
