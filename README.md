@@ -21,7 +21,7 @@ Planned Features:
 
 Current Limitations / Known Issues
 =======
-* Implementation of proper HTTP error codes.
+* Sendfile can hang if GET is cancelled.
 
 Installation
 =======
