@@ -38,7 +38,7 @@
 	new_line db 0x0a
 	start_text db "asmttpd - ",ASMTTPD_VERSION,0x0a,0x00
 	start_text_len equ $ - start_text
-	msg_bind_error     db "Error - Bind() failed. Check if port is in use.",0x00
+	msg_bind_error     db "Error - Bind() failed. Check if port is in use or you have sufficient privileges.",0x00
 	msg_bind_error_len equ $ - msg_bind_error
 	msg_error     db "An error has occured, exiting",0x00
 	msg_error_len equ $ - msg_error
