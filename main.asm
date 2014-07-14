@@ -40,7 +40,7 @@ section .text
 	%include "http.asm"
 	%include "syscall.asm"
 	;%include "mutex.asm"
-	%include "debug.asm"
+	;%include "debug.asm"
 
 global  _start
 
