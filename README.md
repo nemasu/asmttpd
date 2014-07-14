@@ -37,6 +37,10 @@ Usage
 
 Changes
 =======
+2014-07-14 : asmttpd - 0.3
+
+* Added default document support
+
 2014-02-10 : asmttpd - 0.2
 
 * Added 400, 413, 416 responses.

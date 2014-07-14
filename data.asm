@@ -131,6 +131,8 @@
 	content_type_gif db "image/gif",0x0d,0x0a,0x00
 	content_type_gif_len equ $ - content_type_gif
 
+	default_document db "/index.html",0x00
+	default_document_len equ $ - default_document
 	
 	;Content extension
 	extension_html	   db ".html",0x00

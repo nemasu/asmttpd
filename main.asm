@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.2"
+%define ASMTTPD_VERSION "0.3"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
@@ -40,7 +40,7 @@ section .text
 	%include "http.asm"
 	%include "syscall.asm"
 	;%include "mutex.asm"
-	;%include "debug.asm"
+	%include "debug.asm"
 
 global  _start
 
@@ -228,6 +228,22 @@ worker_thread_continue:
 
 	dec r12 ; get rid of 0x00
 
+	;Check if default document needed
+	cmp r9, 0x06 ;TODO why exactly is this 6?
+	jne no_default_document
+	mov rsi, default_document
+	mov rdi, [rbp-16]
+	add rdi, r12
+	mov rcx, default_document_len
+	add r12, rcx
+	rep movsb
+
+	mov r9, r11 ; saving offset into a stack saved register
+	jmp worker_thread_remove_pre_dir
+
+	no_default_document:
+
+
 	; Adds the file to the end of buffer ( where we juts put the document prefix )
 	mov rsi, [rbp-16]
 	add rsi, r8  ; points to beginning of path
@@ -248,6 +264,8 @@ worker_thread_continue:
 	mov r9, r11 ; saving offset into a stack saved register
 	; [rbp-16] + r9 now holds string for file opening
 
+	worker_thread_remove_pre_dir:
+	
 	;-----Simple request logging
 	;mov rdi, msg_request_log
 	;mov rsi, msg_request_log_len
@@ -259,7 +277,6 @@ worker_thread_continue:
 	;call print_line
 	;-----End Simple logging
 	
-	worker_thread_remove_pre_dir:
 	mov rdi, [rbp-16]
 	add rdi, r9
 	mov rsi, filter_prev_dir ; remove any '../'
