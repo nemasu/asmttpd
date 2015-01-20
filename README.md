@@ -3,12 +3,11 @@ asmttpd
 
 Web server for Linux written in amd64 assembly.
 
-Note: This is very much a work in progress and not ready for production.
-
 Features:
-* Multi-threaded
-* No libraries required ( only 64-bit Linux )
-* Fast
+* Multi-threaded.
+* No libraries required ( only 64-bit Linux ).
+* Very small binary, under 6 KB.
+* Quite fast.
 
 What works:
 * Serving files from specified document root.
