@@ -50,8 +50,8 @@ _start:
 	mov rsi, start_text_len
 	call print_line
 
-	mov rdi, [rsp]    ;Num of args
-	cmp rdi,2         ;Exit if no argument, should be directory location
+	mov edi, [rsp]    ;Num of args
+	cmp edi,2         ;Exit if no argument, should be directory location
 	jne exit_with_help
 
 	mov rax, [rsp+16] ;Directory (first) parameter
@@ -68,19 +68,25 @@ _start:
 
 
 	; Register signal handlers ( just close all other threads by jumping to SYS_EXIT_GROUP )
-	mov r10, 8 ; sizeof(sigset_t) displays 128, but strace shows 8 ... so 8 it is! -_-
-	xor rdx, rdx
+	mov r10b, 8 ; sizeof(sigset_t) displays 128, but strace shows 8 ... so 8 it is! -_-
+	xor edx, edx
 	mov QWORD [sa_handler], exit
-	mov rsi, sigaction
-	mov rdi, SIGINT
-	mov rax, SYS_RT_SIGACTION
+	xor esi, esi
+	mov sil, sigaction
+	xor edi, edi
+	mov dil, SIGINT
+	xor eax, eax
+	mov al, SYS_RT_SIGACTION
 	syscall
-	mov rdi, SIGTERM
-	mov rax, SYS_RT_SIGACTION
+	xor edi, edi
+	mov dil, SIGTERM
+	xor eax, eax
+	mov al, SYS_RT_SIGACTION
 	syscall
-	mov QWORD [sa_handler], SIGIGN
-	mov rdi, SIGPIPE
-	mov rax, SYS_RT_SIGACTION
+	mov al, SIGIGN
+	mov QWORD [sa_handler], rax
+	mov dil, SIGPIPE
+	mov al, SYS_RT_SIGACTION
 	syscall
 	
 
@@ -88,43 +94,42 @@ _start:
 	mov rdi, [directory_path]
 	call sys_open_directory
 
-	cmp rax, 0
-	jl exit_with_no_directory_error
+	test eax, eax
+	js exit_with_no_directory_error
 
 	;Create socket
 	call sys_create_tcp_socket
-	cmp rax, 0
-	jl exit_error
+	test eax, eax
+	js exit_error
 	mov [listen_socket], rax
 
 	;Bind to port 80
 	call sys_bind_server
-	cmp rax, 0
-	jl exit_bind_error
+	test eax, eax
+	js exit_bind_error
 	
 	;Start listening
 	call sys_listen
 
 	;Create threads
-	mov r10, THREAD_COUNT
+	mov r10b, THREAD_COUNT
 	
 	thread_pool_setup:
 	push r10
 	
 	mov rdi, worker_thread
-	xor rsi, rsi
+	xor esi, esi
 	call sys_clone
 	
 	pop r10
 	dec r10
-	cmp r10, 0
-	
-	jne thread_pool_setup
+	jnz thread_pool_setup
 
 main_thread:
 	
 
-	mov rdi, 10
+	xor edi, edi
+	mov dil, 10
 	call sys_sleep
 
 	jmp main_thread
@@ -135,7 +140,8 @@ worker_thread:
 	sub rsp, 24
 	;Offsets: 8 - socket fd, 16 - buffer, 24 - int used in tcp corking
 
-	mov QWORD [rbp-16], 0 ; Used for pointer to recieve buffer
+	xor eax, eax
+	mov QWORD [rbp-16], rax ; Used for pointer to recieve buffer
 
 	mov rdi, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT ; Allow room to append null, and to create path
 	call sys_mmap_mem
@@ -158,7 +164,7 @@ worker_thread_continue:
 	mov rdx, THREAD_BUFFER_SIZE    ;size
 	call sys_recv
 
-	cmp rax, 0
+	test eax, eax
 	jle worker_thread_close
 
 	push rax ; save original received length
@@ -178,15 +184,16 @@ worker_thread_continue:
 
 	;Make sure its a valid request
 	mov rdi, [rbp-16]
-	mov rsi, crlfx2
+	mov esi, crlfx2
 	call string_ends_with
 	cmp rax, 1
 	jne worker_thread_400_repsonse
 
 	;Find request
-	mov rax, 0x2F ; '/' character
+	xor eax, eax
+	mov al, 0x2F ; '/' character
 	mov rdi, [rbp-16] ;scan buffer
-	mov rcx, -1         ;Start count
+	or rcx, -1         ;Start count
 	cld               ;Increment rdi
 	repne scasb
 	jne worker_thread_400_repsonse
@@ -196,23 +203,22 @@ worker_thread_continue:
 	mov r8, rax ; start offset for requested file
 	mov rdi, [rbp-16]
 	add rdi, r8
-	mov rax, 0x20  ;'space' character
-	mov rcx, -1
+	xor eax, eax
+	mov al, 0x20  ;'space' character
+	or rcx, -1
 	cld
 	repne scasb
 	jne worker_thread_400_repsonse
-	mov rax, -1
+	or rax, -1
 	sub rax, rcx
-	mov r9, rax
-	add r9, r8  ;end offset
-
+	lea r9, [rax+r8] ; end offset
 	;TODO: Assuming it's a file, need directory handling too
 	
 	pop r11 ; restore orig recvd length
 	mov rdi, [rbp-16]
-	add rdi, r11 ; end of buffer, lets use it!
-	mov r12, r11 ; keeping count
-
+;	add rdi, r11 ; end of buffer, lets use it!
+;	mov r12, r11 ; keeping count
+	lea r12, [rdi+r11] ; shorter version
 	mov rsi, [directory_path]
  	xor r15, r15 ; Make sure directory path does not exceed DIRECTORY_LENGTH_LIMIT
 
@@ -223,7 +229,7 @@ worker_thread_continue:
 	lodsb
 	stosb
 	inc r12
-	cmp al, 0x00
+	test al, al
 	jne worker_thread_append_directory_path
 
 	dec r12 ; get rid of 0x00
@@ -246,8 +252,8 @@ worker_thread_continue:
 
 	; Adds the file to the end of buffer ( where we juts put the document prefix )
 	mov rsi, [rbp-16]
+	mov rdi, rsi
 	add rsi, r8  ; points to beginning of path
-	mov rdi, [rbp-16]
 	add rdi, r12 ;go to end of buffer
 	mov rcx, r9
 	sub rcx, r8
@@ -281,8 +287,8 @@ worker_thread_continue:
 	add rdi, r9
 	mov rsi, filter_prev_dir ; remove any '../'
 	call string_remove
-	cmp rax, 0
-	jne worker_thread_remove_pre_dir
+	test eax, eax
+	jnz worker_thread_remove_pre_dir
 
 
 	mov rdi, [rbp-16]
@@ -296,9 +302,9 @@ worker_thread_continue:
 	mov rdi, [rbp-16]
 	add rdi, r9
 	call sys_open
-	cmp rax, 0
+	test eax, eax
 
-	jl worker_thread_404_response ;file not found, so 404
+	js worker_thread_404_response ;file not found, so 404
 	
 	; Done with buffer offsets, put response and data into it starting at beg
 	mov r10, rax ; r10: file fd
@@ -306,8 +312,9 @@ worker_thread_continue:
 	;Determine if request requires a 206 response
 	
 	mov rdi, r10 ; fd
-	xor rsi, rsi
-	mov rdx, LSEEK_END
+	xor esi, esi
+	xor edx, edx
+	mov dl, LSEEK_END
 	call sys_lseek
 	push rax
 
@@ -350,8 +357,9 @@ worker_thread_continue:
 	
 	;Seek to beg of file
 	mov rdi, r10 ; fd
-	mov rsi, 0
-	mov rdx, LSEEK_SET
+	xor esi, esi
+	xor edx, edx
+	mov dl, LSEEK_SET
 	call sys_lseek
 
 	; find 'bytes='
@@ -359,26 +367,25 @@ worker_thread_continue:
 	add rdi, rax
     mov rsi, find_bytes_range
     call string_contains
-    cmp rax, -1
-    je worker_thread_400_repsonse
+    test eax, eax
+    js worker_thread_400_repsonse
 
     add rdi, rax
     add rdi, 6 ; go to number
 
     push rdi ; save beg of first number
 
-	mov rax, 0
+	xor eax, eax
     create_http206_response_lbeg:
-    inc rdi
+    	inc rdi
 	inc rax
-	cmp rax, 200 ; todo tweak this number
+	cmp al, 200 ; todo tweak this number
 	jge worker_thread_close_file
     cmp BYTE [rdi], 0x2D ; look for '-'
     jne create_http206_response_lbeg
 
     mov BYTE [rdi], 0x00 ; replace '-' with null
-    mov rbx, rdi ; save new beg
-    inc rbx
+    lea rbx, [rdi+1] ; sav new beg
     pop rdi ; restore beg of first number, convert to int
     call string_atoi
 
@@ -437,7 +444,8 @@ worker_thread_continue:
 	push rdi ; save it so we can close it
 
 	mov rsi, r13 ; file offset ( range 'from' )
-	mov rdx, LSEEK_SET
+	xor edx, edx
+	mov dl, LSEEK_SET
 	call sys_lseek
 
 
@@ -467,15 +475,17 @@ worker_thread_continue:
 
 	;Seek to beg of file
 	mov rdi, r10 ; fd
-	mov rsi, 0
-	mov rdx, LSEEK_SET
+	xor esi, esi
+	xor edx, edx
+	mov dl, LSEEK_SET
 	call sys_lseek
 	
 	;Create Response
 	mov rdi, [rbp-16]
 	mov rsi, r8 ; type, figured out above
-	pop rdx ; total file size
-	push rdx ; save for sendfile
+;	pop rdx ; total file size
+;	push rdx ; save for sendfile
+	mov rdx, [rsp]
 	call create_http200_response
 
 	mov r8, rax ; header size
@@ -485,7 +495,7 @@ worker_thread_continue:
 	mov rdx, rax
 	call sys_send
 
-	cmp rax, 0
+	test eax, eax
 	jle worker_thread_close_file
 
 	mov rdi, [rbp-8]
@@ -498,7 +508,7 @@ worker_thread_continue:
 	;---------400 Response Start------------
 	worker_thread_400_repsonse:
 	mov rdi, [rbp-16]
-	mov rsi, 400
+	mov esi, 400
 	call create_httpError_response
 
 	mov rdi, [rbp-8]
@@ -526,7 +536,7 @@ worker_thread_continue:
 	;---------416 Response Start------------
 	worker_thread_416_repsonse:
 	mov rdi, [rbp-16]
-	mov rsi, 416
+	mov esi, 416
 	call create_httpError_response
 
 	mov rdi, [rbp-8]
@@ -567,28 +577,32 @@ exit_with_help:
 
 exit_error:
 	mov rdi, msg_error
-	mov rsi, msg_error_len
+	xor esi, esi
+	mov sil, msg_error_len
 	call print_line
 
-	mov rdi, -1
+	or  rdi, -1
 	mov rax, SYS_EXIT_GROUP
 	syscall
 	jmp exit
 
 exit_bind_error:
 	mov rdi, msg_bind_error
-	mov rsi, msg_bind_error_len
+	xor esi, esi
+	mov sil, msg_bind_error_len
 	call print_line
 
-	mov rdi, -1
-	mov rax, SYS_EXIT_GROUP
+	or rdi, -1
+	xor eax, eax
+	mov al, SYS_EXIT_GROUP
 	syscall
 	jmp exit
 
 exit_thread:
 
-	xor rdi, rdi
-	mov rax, SYS_EXIT
+	xor edi, edi
+	xor eax, eax
+	mov al, SYS_EXIT
 	syscall
 	jmp exit
 
@@ -597,7 +611,8 @@ exit:
 	mov rdi, [listen_socket]
 	call sys_close
 
-	xor rdi, rdi 
-	mov rax, SYS_EXIT_GROUP
+	xor edi, edi 
+	xor eax, eax
+	mov al, SYS_EXIT_GROUP
 	syscall
 
