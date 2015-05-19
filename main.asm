@@ -70,7 +70,8 @@ _start:
 	; Register signal handlers ( just close all other threads by jumping to SYS_EXIT_GROUP )
 	mov r10, 8 ; sizeof(sigset_t) displays 128, but strace shows 8 ... so 8 it is! -_-
 	xor rdx, rdx
-  ;mov QWORD [rel sa_handler], exit
+  mov rdi, qword exit
+  mov [rel sa_handler], rdi
 	mov rsi, qword sigaction
 	mov rdi, SIGINT
 	mov rax, SYS_RT_SIGACTION
