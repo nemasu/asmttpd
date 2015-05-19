@@ -46,7 +46,7 @@ global  _start
 
 _start:
 	
-	mov rdi, start_text
+	mov rdi, qword start_text
 	mov rsi, start_text_len
 	call print_line
 
@@ -55,13 +55,13 @@ _start:
 	jne exit_with_help
 
 	mov rax, [rsp+16] ;Directory (first) parameter
-	mov [directory_path], rax 
+	mov [rel directory_path], rax
 
-	mov rdi, msg_using_directory
+	mov rdi, qword msg_using_directory
 	mov rsi, msg_using_directory_len
 	call sys_write
 	
-	mov rdi, [directory_path]
+	mov rdi, [rel directory_path]
 	call get_string_length
 	mov rsi, rax
 	call print_line
@@ -70,22 +70,22 @@ _start:
 	; Register signal handlers ( just close all other threads by jumping to SYS_EXIT_GROUP )
 	mov r10, 8 ; sizeof(sigset_t) displays 128, but strace shows 8 ... so 8 it is! -_-
 	xor rdx, rdx
-	mov QWORD [sa_handler], exit
-	mov rsi, sigaction
+  ;mov QWORD [rel sa_handler], exit
+	mov rsi, qword sigaction
 	mov rdi, SIGINT
 	mov rax, SYS_RT_SIGACTION
 	syscall
 	mov rdi, SIGTERM
 	mov rax, SYS_RT_SIGACTION
 	syscall
-	mov QWORD [sa_handler], SIGIGN
+	mov QWORD [rel sa_handler], SIGIGN
 	mov rdi, SIGPIPE
 	mov rax, SYS_RT_SIGACTION
 	syscall
 	
 
 	;Try opening directory
-	mov rdi, [directory_path]
+	mov rdi, [rel directory_path]
 	call sys_open_directory
 
 	cmp rax, 0
@@ -95,7 +95,7 @@ _start:
 	call sys_create_tcp_socket
 	cmp rax, 0
 	jl exit_error
-	mov [listen_socket], rax
+	mov [rel listen_socket], rax
 
 	;Bind to port 80
 	call sys_bind_server
@@ -111,7 +111,7 @@ _start:
 	thread_pool_setup:
 	push r10
 	
-	mov rdi, worker_thread
+	mov rdi, qword worker_thread
 	xor rsi, rsi
 	call sys_clone
 	
@@ -178,7 +178,7 @@ worker_thread_continue:
 
 	;Make sure its a valid request
 	mov rdi, [rbp-16]
-	mov rsi, crlfx2
+	mov rsi, qword crlfx2
 	call string_ends_with
 	cmp rax, 1
 	jne worker_thread_400_repsonse
@@ -213,7 +213,7 @@ worker_thread_continue:
 	add rdi, r11 ; end of buffer, lets use it!
 	mov r12, r11 ; keeping count
 
-	mov rsi, [directory_path]
+	mov rsi, [rel directory_path]
  	xor r15, r15 ; Make sure directory path does not exceed DIRECTORY_LENGTH_LIMIT
 
 	worker_thread_append_directory_path:
@@ -231,7 +231,7 @@ worker_thread_continue:
 	;Check if default document needed
 	cmp r9, 0x06 ;TODO why exactly is this 6?
 	jne no_default_document
-	mov rsi, default_document
+	mov rsi, qword default_document
 	mov rdi, [rbp-16]
 	add rdi, r12
 	mov rcx, default_document_len
@@ -279,7 +279,7 @@ worker_thread_continue:
 	
 	mov rdi, [rbp-16]
 	add rdi, r9
-	mov rsi, filter_prev_dir ; remove any '../'
+	mov rsi, qword filter_prev_dir ; remove any '../'
 	call string_remove
 	cmp rax, 0
 	jne worker_thread_remove_pre_dir
@@ -313,7 +313,7 @@ worker_thread_continue:
 
 	;Basically if "Range:" is in the header	
 	mov rdi, [rbp-16]
-	mov rsi, header_range_search
+	mov rsi, qword header_range_search
 	call string_contains
 
 	pop rdi	
@@ -357,7 +357,7 @@ worker_thread_continue:
 	; find 'bytes='
     mov rdi, [rbp-16]
 	add rdi, rax
-    mov rsi, find_bytes_range
+    mov rsi, qword find_bytes_range
     call string_contains
     cmp rax, -1
     je worker_thread_400_repsonse
@@ -554,19 +554,19 @@ worker_thread_continue:
 	jmp worker_thread_start 
 	
 exit_with_no_directory_error:
-	mov rdi, msg_not_a_directory
+	mov rdi, qword msg_not_a_directory
 	mov rsi, msg_not_a_directory_len
 	call print_line
 	jmp exit
 
 exit_with_help:
-	mov rdi, msg_help
+	mov rdi, qword msg_help
 	mov rsi, msg_help_len
 	call print_line
 	jmp exit
 
 exit_error:
-	mov rdi, msg_error
+	mov rdi, qword msg_error
 	mov rsi, msg_error_len
 	call print_line
 
@@ -576,7 +576,7 @@ exit_error:
 	jmp exit
 
 exit_bind_error:
-	mov rdi, msg_bind_error
+	mov rdi, qword msg_bind_error
 	mov rsi, msg_bind_error_len
 	call print_line
 
@@ -594,7 +594,7 @@ exit_thread:
 
 exit:
 	
-	mov rdi, [listen_socket]
+	mov rdi, [rel listen_socket]
 	call sys_close
 
 	xor rdi, rdi 

@@ -24,8 +24,9 @@ release: http.asm constants.asm bss.asm data.asm  macros.asm  main.asm  mutex.as
 	strip -s asmttpd
 
 main.o: http.asm constants.asm bss.asm  data.asm  macros.asm  main.asm  mutex.asm  string.asm  syscall.asm
-	yasm -g dwarf2 -f elf64 -a x86 main.asm -o main.o
+	#yasm -g dwarf2 -f macho32 -a x86 main.asm -o main.o
+	yasm -f macho64 -a x86 main.asm -o main.o
 main: main.o
-	ld main.o -o asmttpd
+	ld main.o -o asmttpd -macosx_version_min 10.10 -e _start -lSystem
 clean:
 	rm -rf main.o asmttpd
