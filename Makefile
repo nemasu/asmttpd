@@ -27,7 +27,7 @@ release: http.asm constants.asm bss.asm data.asm  macros.asm  main.asm  mutex.as
 
 main.o: http.asm constants.asm bss.asm  data.asm  macros.asm  main.asm  mutex.asm  string.asm  syscall.asm
 ifeq ($(uname_S),Linux)
-		yasm -g dwarf2 -f macho32 -a x86 main.asm -o main.o
+		yasm -g dwarf2 -f elf64 -a x86 main.asm -o main.o
 endif
 ifeq ($(uname_S),Darwin)
 	yasm -f macho64 -a x86 main.asm -o main.o
