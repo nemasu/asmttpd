@@ -16,6 +16,8 @@ GNU General Public License for more details. \
 You should have received a copy of the GNU General Public License \
 along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
 
+uname_S := $(shell sh -c 'uname -s 2>/dev/null')
+
 all: main
 
 release: http.asm constants.asm bss.asm data.asm  macros.asm  main.asm  mutex.asm  string.asm  syscall.asm
@@ -24,9 +26,20 @@ release: http.asm constants.asm bss.asm data.asm  macros.asm  main.asm  mutex.as
 	strip -s asmttpd
 
 main.o: http.asm constants.asm bss.asm  data.asm  macros.asm  main.asm  mutex.asm  string.asm  syscall.asm
-	#yasm -g dwarf2 -f macho32 -a x86 main.asm -o main.o
+ifeq ($(uname_S),Linux)
+		yasm -g dwarf2 -f macho32 -a x86 main.asm -o main.o
+endif
+ifeq ($(uname_S),Darwin)
 	yasm -f macho64 -a x86 main.asm -o main.o
+endif
+
 main: main.o
+ifeq ($(uname_S),Linux)
+	ld main.o -o asmttpd
+endif
+ifeq ($(uname_S),Darwin)
 	ld main.o -o asmttpd -macosx_version_min 10.10 -e _start -lSystem
+endif
+
 clean:
 	rm -rf main.o asmttpd
