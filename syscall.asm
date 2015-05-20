@@ -97,7 +97,7 @@ sys_recv:
 
 sys_accept:
 	stackpush
-	mov rdi, [listen_socket]
+	mov rdi, [rel listen_socket]
 	xor rsi, rsi
 	xor rdx, rdx
 	mov rax, SYS_ACCEPT
@@ -107,7 +107,7 @@ sys_accept:
 
 sys_listen:
 	stackpush
-	mov rdi, [listen_socket]
+	mov rdi, [rel listen_socket]
 	mov rsi, 100000000;backlog
 	mov rax, SYS_LISTEN
 	syscall
@@ -116,8 +116,8 @@ sys_listen:
 
 sys_bind_server:
 	stackpush
-	mov rdi, [listen_socket]
-	mov rsi, sockaddr_in
+	mov rdi, [rel listen_socket]
+	mov rsi, qword sockaddr_in
 	mov rdx, 16
 	mov rax, SYS_BIND
 	syscall
@@ -154,10 +154,10 @@ sys_write:
 
 sys_nanosleep:
 	stackpush
-	mov qword [tv_usec], rdi
-	mov qword [tv_sec],0
+	mov qword [rel tv_usec], rdi
+	mov qword [rel tv_sec],0
 	xor rsi, rsi
-	mov rdi, timeval
+	mov rdi, qword timeval
 	mov rax, SYS_NANOSLEEP
 	syscall
 	stackpop
@@ -165,10 +165,10 @@ sys_nanosleep:
 
 sys_sleep:
 	stackpush
-	mov qword [tv_sec], rdi
-	mov qword [tv_usec],0
+	mov qword [rel tv_sec], rdi
+	mov qword [rel tv_usec],0
 	xor rsi, rsi
-	mov rdi, timeval
+	mov rdi, qword timeval
 	mov rax, SYS_NANOSLEEP
 	syscall
 	stackpop

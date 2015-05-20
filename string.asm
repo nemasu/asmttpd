@@ -279,7 +279,7 @@ string_char_at_reverse: ;rdi = haystack, rsi = count from end, rdx = character(n
 print_line: ; rdi = pointer, rsi = length
 	stackpush
 	call sys_write
-	mov rdi, new_line
+	mov rdi, qword new_line
 	mov rsi, 1
 	call sys_write
 	stackpop
