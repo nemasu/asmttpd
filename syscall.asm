@@ -194,8 +194,8 @@ sys_mmap_stack:
 	xor rdi, rdi                                                    ;Preferred address (don't care)
 	mov rdx, MMAP_PROT_READ | MMAP_PROT_WRITE                       ;Protection Flags
 	mov r10, MMAP_MAP_PRIVATE | MMAP_MAP_ANON | MMAP_MAP_GROWSDOWN  ;Flags
-	xor r8, r8
-	dec r8                                                          ;-1 fd becasue of MMAP_MAP_ANON
+	
+	or r8, -1                                                          ;-1 fd because of MMAP_MAP_ANON
 	xor r9, r9                                                      ;Offset
 	mov rax, SYS_MMAP
 	syscall
