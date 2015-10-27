@@ -32,107 +32,108 @@
 	
 	;Strings
 	in_enter db "In Enter:",0x00
-	in_enter_len equ $ - in_enter
+	in_enter_len = $ - in_enter
 	in_exit  db "In Exit:", 0x00
-	in_exit_len equ $ - in_exit
+	in_exit_len = $ - in_exit
 	new_line db 0x0a
 	start_text db "asmttpd - ",ASMTTPD_VERSION,0x0a,0x00
-	start_text_len equ $ - start_text
+	start_text_len = $ - start_text
 	msg_bind_error     db "Error - Bind() failed. Check if port is in use or you have sufficient privileges.",0x00
-	msg_bind_error_len equ $ - msg_bind_error
+	msg_bind_error_len = $ - msg_bind_error
 	msg_error     db "An error has occured, exiting",0x00
-	msg_error_len equ $ - msg_error
+	msg_error_len = $ - msg_error
 	msg_help      db "Usage: ./asmttpd /path/to/directory",0x00
-	msg_help_len  equ $ - msg_help
-	msg_using_directory dd "Using Document Root: ",0x00
-	msg_using_directory_len equ $ - msg_using_directory
-	msg_not_a_directory dd "Error: Specified document root is not a directory",0x00
-	msg_not_a_directory_len equ $ - msg_not_a_directory
+	msg_help_len  = $ - msg_help
+
+	msg_using_directory db "Using Document Root: ", 0x00
+	msg_using_directory_len = $ - msg_using_directory
+	msg_not_a_directory db "Error: Specified document root is not a directory",0x00
+	msg_not_a_directory_len = $ - msg_not_a_directory
 	msg_request_log db 0x0a,"Request: ",0x00
 	msg_request_log_len equ $ - msg_request_log
 
 	header_range_search db "Range: ",0x00
-	header_range_search_len equ $ - header_range_search
+	header_range_search_len = $ - header_range_search
 
 	find_bytes_range db "bytes=",0x00
-	find_bytes_range_len equ $ - find_bytes_range
+	find_bytes_range_len = $ - find_bytes_range
 	
 	filter_prev_dir db "../",0x00
-	filter_prev_dir_len equ $ - filter_prev_dir
+	filter_prev_dir_len = $ - filter_prev_dir
 
 	crlfx2 db 0x0d,0x0a,0x0d,0x0a,0x00
-	crlfx2_len equ $ - crlfx2
+	crlfx2_len = $ - crlfx2
 	
 	crlf db 0x0d,0x0a,0x00
-	crlf_len equ $ - crlf
+	crlf_len = $ - crlf
 
 	char_slash db "/",0x00
 	char_hyphen db "-",0x00
 
 	;HTTP
 	http_200 db "HTTP/1.1 200 OK",0x0d,0x0a,0x00
-	http_200_len equ $ - http_200
+	http_200_len = $ - http_200
 	http_206 db "HTTP/1.1 206 Partial Content",0x0d,0x0a,0x00
-	http_206_len equ $ - http_206
+	http_206_len = $ - http_206
 	http_404 db "HTTP/1.1 404 Not Found",0x0d,0x0a,0x00
-	http_404_len equ $ - http_404
+	http_404_len = $ - http_404
 	http_404_text db "I'm sorry, Dave. I'm afraid I can't do that. 404 Not Found",0x00
-	http_404_text_len equ $ - http_404_text_len
+	http_404_text_len = $ - http_404_text
 	http_400 db "HTTP/1.1 400 Bad Request",0x0d,0x0a,0x00
-	http_400_len equ $ - http_400
+	http_400_len = $ - http_400
 	http_413 db "HTTP/1.1 413 Request Entity Too Large",0x0d,0x0a,0x00
-	http_413_len equ $ - http_413
+	http_413_len = $ - http_413
 	http_416 db "HTTP/1.1 416 Requested Range Not Satisfiable",0x0d,0x0a,0x00
-	http_416_len equ $ - http_416
+	http_416_len = $ - http_416
 
 	server_header db     "Server: asmttpd/",ASMTTPD_VERSION,0x0d,0x0a,0x00
-	server_header_len equ $ - server_header
+	server_header_len = $ - server_header
 	
 	range_header db "Accept-Ranges: bytes",0x0d,0x0a,0x00
-	range_header_len equ $ - range_header
+	range_header_len = $ - range_header
 
 	content_range db "Content-Range: bytes ",0x00
-	content_range_len equ $ - content_range  ;Content-Range: bytes 200-1000/3000
+	content_range_len = $ - content_range  ;Content-Range: bytes 200-1000/3000
 	
 	content_length db "Content-Length: ",0x00 ;Content-Length: 800
-	content_length_len equ $ - content_length
+	content_length_len = $ - content_length
 
 	connection_header db "Connection: close",0x0d,0x0a,0x00
-	connection_header_len equ $ - connection_header
+	connection_header_len = $ - connection_header
 	
 	content_type db "Content-Type: ",0x00
-	content_type_len equ $ - content_type
+	content_type_len = $ - content_type
 	
 	;Content-Type
 	content_type_html db "text/html",0x0d,0x0a,0x00
-	content_type_html_len equ $ - content_type_html
+	content_type_html_len = $ - content_type_html
 	
 	content_type_octet_stream db "application/octet-stream",0x0d,0x0a,0x00
-	content_type_octet_stream_len equ $ - content_type_octet_stream
+	content_type_octet_stream_len = $ - content_type_octet_stream
 	
 	content_type_xhtml db "application/xhtml+xml",0x0d,0x0a,0x00
-	content_type_xhtml_len equ $ - content_type_xhtml
+	content_type_xhtml_len = $ - content_type_xhtml
 	
 	content_type_xml db "text/xml",0x0d,0x0a,0x00
-	content_type_xml_len equ $ - content_type_xml
+	content_type_xml_len = $ - content_type_xml
 	
 	content_type_javascript db "application/javascript",0x0d,0x0a,0x00
-	content_type_javascript_len equ $ - content_type_javascript
+	content_type_javascript_len = $ - content_type_javascript
 	
 	content_type_css db "text/css",0x0d,0x0a,0x00
-	content_type_css_len equ $ - content_type_css
+	content_type_css_len = $ - content_type_css
 
 	content_type_jpeg db "image/jpeg",0x0d,0x0a,0x00
-	content_type_jpeg_len equ $ - content_type_jpeg
+	content_type_jpeg_len = $ - content_type_jpeg
 
 	content_type_png db "image/png",0x0d,0x0a,0x00
-	content_type_png_len equ $ - content_type_png
+	content_type_png_len = $ - content_type_png
 	
 	content_type_gif db "image/gif",0x0d,0x0a,0x00
-	content_type_gif_len equ $ - content_type_gif
+	content_type_gif_len = $ - content_type_gif
 
 	default_document db "/index.html",0x00
-	default_document_len equ $ - default_document
+	default_document_len = $ - default_document
 	
 	;Content extension
 	extension_html	   db ".html",0x00

@@ -1,3 +1,6 @@
+format ELF64 executable
+
+;*fasm version*
 ;asmttpd - Web server for Linux written in amd64 assembly.
 ;Copyright (C) 2014  Nathan Torchia <nemasu@gmail.com>
 ;
@@ -16,33 +19,21 @@
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
 
-%include "constants.asm"
-%include "macros.asm"
+include "constants.asm"
+include "macros.asm"
 
-%define ASMTTPD_VERSION "0.3"
+define ASMTTPD_VERSION "0.3"
 
-%define LISTEN_PORT 0x5000 ; PORT 80, network byte order
+define LISTEN_PORT 0x901F ; PORT 8080, network byte order
 
-%define THREAD_COUNT 10 ; Number of worker threads
+define THREAD_COUNT 10 ; Number of worker threads
 
 ;Follwing amd64 syscall standards for internal function calls: rdi rsi rdx r10 r8 r9
-section .data
+segment readable writable
+	include "data.asm"
+	include "bss.asm"
 
-	%include "data.asm"
-
-section .bss
-
-	%include "bss.asm"
-
-section .text
-
-	%include "string.asm"
-	%include "http.asm"
-	%include "syscall.asm"
-	;%include "mutex.asm"
-	;%include "debug.asm"
-
-global  _start
+entry $
 
 _start:
 	
@@ -601,3 +592,9 @@ exit:
 	mov rax, SYS_EXIT_GROUP
 	syscall
 
+
+	include "string.asm"
+	include "http.asm"
+	include "syscall.asm"
+	;%include "mutex.asm"
+	;%include "debug.asm"
