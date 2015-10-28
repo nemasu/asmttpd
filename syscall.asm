@@ -16,7 +16,7 @@
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
 
-section .text
+segment readable executable
 
 sys_cork:;rdi - socket
 	stackpush
@@ -31,7 +31,7 @@ sys_cork:;rdi - socket
 	stackpop
 	ret
 
-sys_uncork;rdi - socket
+sys_uncork:;rdi - socket
 	stackpush
 	mov QWORD [rbp-24], 0
 	mov r8, 8        ;sizeof int
@@ -136,7 +136,7 @@ sys_create_tcp_socket:
 
 sys_open_directory:;rdi = path, rax = ret ( fd )
 	stackpush
-	mov rsi, OPEN_DIRECTORY | OPEN_RDONLY ;flags 
+	mov rsi, OPEN_DIRECTORY or OPEN_RDONLY ;flags 
 	mov rax, SYS_OPEN
 	syscall
 	stackpop
@@ -178,8 +178,8 @@ sys_mmap_mem:
 	stackpush
 	mov rsi, rdi                                                    ;Size
 	xor rdi, rdi                                                    ;Preferred address (don't care)
-	mov rdx, MMAP_PROT_READ | MMAP_PROT_WRITE                       ;Protection Flags
-	mov r10, MMAP_MAP_PRIVATE | MMAP_MAP_ANON                       ;Flags
+	mov rdx, MMAP_PROT_READ or MMAP_PROT_WRITE                       ;Protection Flags
+	mov r10, MMAP_MAP_PRIVATE or MMAP_MAP_ANON                       ;Flags
 	xor r8, r8
 	dec r8                                                          ;-1 fd because of MMAP_MAP_ANON
 	xor r9, r9                                                      ;Offset
@@ -192,8 +192,8 @@ sys_mmap_stack:
 	stackpush
 	mov rsi, rdi                                                    ;Size
 	xor rdi, rdi                                                    ;Preferred address (don't care)
-	mov rdx, MMAP_PROT_READ | MMAP_PROT_WRITE                       ;Protection Flags
-	mov r10, MMAP_MAP_PRIVATE | MMAP_MAP_ANON | MMAP_MAP_GROWSDOWN  ;Flags
+	mov rdx, MMAP_PROT_READ or MMAP_PROT_WRITE                       ;Protection Flags
+	mov r10, MMAP_MAP_PRIVATE or MMAP_MAP_ANON or MMAP_MAP_GROWSDOWN  ;Flags
 	xor r8, r8
 	dec r8                                                          ;-1 fd because of MMAP_MAP_ANON
 	xor r9, r9                                                      ;Offset
@@ -208,7 +208,7 @@ sys_clone:
 	mov rdi, THREAD_STACK_SIZE
 	call sys_mmap_stack
 	mov rsi, rax       ;Set newly allocated memory
-	mov rdi, CLONE_FILES | CLONE_VM | CLONE_FS | CLONE_THREAD | CLONE_SIGHAND | SIGCHILD ;Flags
+	mov rdi, CLONE_FILES or CLONE_VM or CLONE_FS or CLONE_THREAD or CLONE_SIGHAND or SIGCHILD ;Flags
 	xor r10, r10 ;parent_tid
 	xor r8,  r8 ;child_tid
 	xor r9,  r9 ;regs
