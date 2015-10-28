@@ -15,10 +15,10 @@
 ;
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
-;section .bss
-printbuffer:   rb 1024;debug
+section .bss
+printbuffer:   resb 1024;debug
 
-;section .text
+section .text
 print_rdi:
  
 	stackpush

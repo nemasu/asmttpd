@@ -15,5 +15,4 @@
 ;
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
-
-    listen_socket: rq 1
+    listen_socket: resq 1
