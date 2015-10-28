@@ -27,12 +27,12 @@ Installation
 
 Run `make` or `make release` for non-debug version.
 
-You will need `yasm` installed.
+You will need `fasm` installed.
 
 Usage
 =======
 
-`sudo ./asmttpd /path/to/web_root`
+`sudo ./fasmttpd /path/to/web_root`
 
 Changes
 =======
