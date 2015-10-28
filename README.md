@@ -1,7 +1,7 @@
-(f)asmttpd
-==========
+asmttpd
+=======
 
-Web server for Linux written in amd64 assembly - This is the Flat Assembler version.
+Web server for Linux written in amd64 assembly.
 
 Features:
 * Multi-threaded.

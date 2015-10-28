@@ -17,7 +17,7 @@
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
 
 ; Simple Macros
-macro stackpush {
+%macro stackpush 0
 	push rdi
 	push rsi
 	push rdx
@@ -26,9 +26,9 @@ macro stackpush {
 	push r9
 	push rbx
 	push rcx
-}
+%endmacro
 
-macro stackpop {
+%macro stackpop 0
 	pop rcx
 	pop rbx
 	pop r9
@@ -37,5 +37,5 @@ macro stackpop {
 	pop rdx
 	pop rsi
 	pop rdi
-}
+%endmacro
 
