@@ -21,6 +21,6 @@ all: main
 release:
 	fasm main.asm fasmttpd
 main:
-	fasm main.asm fasmttpd
+	fasm main.asm fasmttpd -s debugs.fas
 clean:
 	rm -rf fasmttpd
