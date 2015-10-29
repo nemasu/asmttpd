@@ -77,7 +77,7 @@
 	http_404 db "HTTP/1.1 404 Not Found",0x0d,0x0a,0x00
 	http_404_len equ $ - http_404
 	http_404_text db "I'm sorry, Dave. I'm afraid I can't do that. 404 Not Found",0x00
-	http_404_text_len equ $ - http_404_text_len
+	http_404_text_len equ $ - http_404_text
 	http_400 db "HTTP/1.1 400 Bad Request",0x0d,0x0a,0x00
 	http_400_len equ $ - http_400
 	http_413 db "HTTP/1.1 413 Request Entity Too Large",0x0d,0x0a,0x00
