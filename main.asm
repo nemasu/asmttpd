@@ -21,7 +21,7 @@
 
 %define ASMTTPD_VERSION "0.3"
 
-%define LISTEN_PORT 0x5000 ; PORT 80, network byte order
+%define LISTEN_PORT 0x5500 ; PORT 80, network byte order
 
 %define THREAD_COUNT 10 ; Number of worker threads
 
@@ -182,6 +182,11 @@ worker_thread_continue:
 	call string_ends_with
 	cmp rax, 1
 	jne worker_thread_400_repsonse
+
+	mov rdi, [rbp-16]
+	call get_request_type
+	cmp rax, REQ_UNK
+	je worker_thread_400_repsonse
 
 	;Find request
 	mov rax, 0x2F ; '/' character
@@ -487,6 +492,11 @@ worker_thread_continue:
 
 	cmp rax, 0
 	jle worker_thread_close_file
+
+	mov rdi, [rbp-16]
+	call get_request_type
+	cmp rax, REQ_HEAD
+	je worker_thread_close_file
 
 	mov rdi, [rbp-8]
 	mov rsi, r10

@@ -32,6 +32,11 @@
 %define URL_LENGTH_LIMIT 2000
 %define DIRECTORY_LENGTH_LIMIT 100
 
+;Request Types
+%define REQ_UNK    0
+%define REQ_GET    1
+%define REQ_HEAD   2
+
 ;Flags
 %define MMAP_PROT_READ     0x1
 %define MMAP_PROT_WRITE    0x2
