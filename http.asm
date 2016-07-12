@@ -345,3 +345,31 @@ create_http404_response: ;rdi - pointer to buffer
 
 	stackpop
 	ret
+
+get_request_type: ;rdi - pointer to buffer, ret = rax: request type
+	stackpush
+	mov rax, REQ_UNK
+
+	check_get:
+	cmp byte[rdi+0], 0x47
+	jne check_head
+	cmp byte[rdi+1], 0x45
+	jne check_head
+	cmp byte[rdi+2], 0x54
+	jne check_head
+	mov rax, REQ_GET
+
+	check_head:
+	cmp byte[rdi+0], 0x48
+	jne request_type_return
+	cmp byte[rdi+1], 0x45
+	jne request_type_return
+	cmp byte[rdi+2], 0x41
+	jne request_type_return
+	cmp byte[rdi+3], 0x44
+	jne request_type_return
+	mov rax, REQ_HEAD
+
+	request_type_return:
+	stackpop
+	ret
