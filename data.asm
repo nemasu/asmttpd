@@ -21,6 +21,8 @@
 		sin_port   dw LISTEN_PORT
 		sin_addr   dd 0 ;INADDR_ANY
 	directory_path dq 0    
+       request_type dq 0
+       request_offset dq 0
 	timeval: ;struct
         tv_sec  dq 0
         tv_usec dq 0
