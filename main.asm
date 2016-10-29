@@ -185,7 +185,8 @@ worker_thread_continue:
 
 	mov rdi, [rbp-16]
 	call get_request_type
-	cmp rax, REQ_UNK
+       mov [request_type], rax
+       cmp BYTE [request_type], REQ_UNK
 	je worker_thread_400_repsonse
 
 	;Find request
@@ -234,7 +235,7 @@ worker_thread_continue:
 	dec r12 ; get rid of 0x00
 
 	;Check if default document needed
-	cmp r9, 0x06 ;TODO why exactly is this 6?
+       cmp r9, [request_offset] ; Offset of document requested
 	jne no_default_document
 	mov rsi, default_document
 	mov rdi, [rbp-16]
@@ -242,7 +243,6 @@ worker_thread_continue:
 	mov rcx, default_document_len
 	add r12, rcx
 	rep movsb
-
 	mov r9, r11 ; saving offset into a stack saved register
 	jmp worker_thread_remove_pre_dir
 
@@ -493,9 +493,7 @@ worker_thread_continue:
 	cmp rax, 0
 	jle worker_thread_close_file
 
-	mov rdi, [rbp-16]
-	call get_request_type
-	cmp rax, REQ_HEAD
+       cmp BYTE [request_type], REQ_HEAD
 	je worker_thread_close_file
 
 	mov rdi, [rbp-8]
