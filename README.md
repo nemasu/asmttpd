@@ -11,12 +11,12 @@ Features:
 
 What works:
 * Serving files from specified document root.
+* HEAD requests.
 * 200, 206, 404, 400, 413, 416
 * Content-types: xml, html, xhtml, gif, png, jpeg, css, js, and octet-stream.
   
 Planned Features:
 * Directory listing.
-* HEAD support.
 
 Current Limitations / Known Issues
 =======
@@ -36,9 +36,14 @@ Usage
 
 Changes
 =======
+
+2016-10-31 : asmttpd - 0.4
+
+* HEAD support.
+
 2014-07-14 : asmttpd - 0.3
 
-* Added default document support
+* Added default document support.
 
 2014-02-10 : asmttpd - 0.2
 
