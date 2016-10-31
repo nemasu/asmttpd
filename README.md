@@ -6,7 +6,7 @@ Web server for Linux written in amd64 assembly.
 Features:
 * Multi-threaded.
 * No libraries required ( only 64-bit Linux ).
-* Very small binary, under 6 KB.
+* Very small binary, roughly 6 KB.
 * Quite fast.
 
 What works:
