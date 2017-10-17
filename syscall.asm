@@ -207,7 +207,7 @@ sys_clone:
 	mov r15, rsi      ;Thread Param
 	mov rdi, THREAD_STACK_SIZE
 	call sys_mmap_stack
-	mov rsi, rax       ;Set newly allocated memory
+	lea rsi, [rax + THREAD_STACK_SIZE]       ;Set newly allocated memory
 	mov rdi, CLONE_FILES | CLONE_VM | CLONE_FS | CLONE_THREAD | CLONE_SIGHAND | SIGCHILD ;Flags
 	xor r10, r10 ;parent_tid
 	xor r8,  r8 ;child_tid

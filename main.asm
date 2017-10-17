@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.4"
+%define ASMTTPD_VERSION "0.41"
 
 %define LISTEN_PORT 0x5000 ; PORT 80, network byte order
 
