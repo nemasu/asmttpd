@@ -37,6 +37,10 @@ Usage
 Changes
 =======
 
+2017-10-17 : asmttpd - 0.41
+
+* Stack address bug fix.
+
 2016-10-31 : asmttpd - 0.4
 
 * HEAD support.
