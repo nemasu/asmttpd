@@ -37,7 +37,7 @@ Usage
 Changes
 =======
 
-2017-10-17 : asmttpd - 0.41
+2017-10-17 : asmttpd - 0.4.1
 
 * Stack address bug fix.
 
