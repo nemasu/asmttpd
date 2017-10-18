@@ -17,53 +17,53 @@
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
 
 mutex_leave: 
-	stackpush
+    stackpush
 
-	mov rax, 1
-	mov rdi, 0
-	lock cmpxchg [queue_futex], rdi ; 1 -> 0 case
-	cmp rax, 1
-	je mutex_leave_end
+    mov rax, 1
+    mov rdi, 0
+    lock cmpxchg [queue_futex], rdi ; 1 -> 0 case
+    cmp rax, 1
+    je mutex_leave_end
 
-	mov QWORD [queue_futex], 0
-	mov rdi, 1
-	call sys_futex_wake
+    mov QWORD [queue_futex], 0
+    mov rdi, 1
+    call sys_futex_wake
 
-	mutex_leave_end:
-	stackpop
-	ret
+    mutex_leave_end:
+    stackpop
+    ret
 
 mutex_enter:
-	stackpush
+    stackpush
 
-	mov rax, 0
-	mov rdi, 1
-	lock cmpxchg [queue_futex], rdi
-	cmp rax, 0
-	je mutex_enter_end
+    mov rax, 0
+    mov rdi, 1
+    lock cmpxchg [queue_futex], rdi
+    cmp rax, 0
+    je mutex_enter_end
 
-	mutex_enter_begin:
-	cmp rax, 2
-	je mutex_enter_wait
-	mov rax, 1
-	mov rdi, 2
-	lock cmpxchg [queue_futex], rdi
-	cmp rax, 1
-	je mutex_enter_wait
-	;Both tries ( c == 2 || cmpxchg( 1, 2 ) ) failed
-	mutex_enter_cont:
-	mov rax, 0
-	mov rdi, 2
-	lock cmpxchg [queue_futex], rdi
-	cmp rax, 0
-	jne mutex_enter_begin
-	jmp mutex_enter_end
+    mutex_enter_begin:
+    cmp rax, 2
+    je mutex_enter_wait
+    mov rax, 1
+    mov rdi, 2
+    lock cmpxchg [queue_futex], rdi
+    cmp rax, 1
+    je mutex_enter_wait
+    ;Both tries ( c == 2 || cmpxchg( 1, 2 ) ) failed
+    mutex_enter_cont:
+    mov rax, 0
+    mov rdi, 2
+    lock cmpxchg [queue_futex], rdi
+    cmp rax, 0
+    jne mutex_enter_begin
+    jmp mutex_enter_end
 
-	mutex_enter_wait:
-	mov rdi, 2
-	call sys_futex_wait
-	jmp mutex_enter_cont
+    mutex_enter_wait:
+    mov rdi, 2
+    call sys_futex_wait
+    jmp mutex_enter_cont
 
-	mutex_enter_end:
-	stackpop
-	ret
+    mutex_enter_end:
+    stackpop
+    ret
