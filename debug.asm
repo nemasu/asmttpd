@@ -21,49 +21,49 @@ printbuffer:   resb 1024;debug
 section .text
 print_rdi:
  
-	stackpush
-	push rax
-	push rbx
-	push rcx
-	
+    stackpush
+    push rax
+    push rbx
+    push rcx
+    
 
-	call get_number_of_digits
-	mov rcx, rax ;
+    call get_number_of_digits
+    mov rcx, rax ;
 
-	inc rax ;include NL char in length
-	push rax; save length for syscall
+    inc rax ;include NL char in length
+    push rax; save length for syscall
 
-	;add lf
-	mov rdx, 0xa
-	mov [printbuffer+rcx], dl
-	dec rcx
+    ;add lf
+    mov rdx, 0xa
+    mov [printbuffer+rcx], dl
+    dec rcx
 
-	mov rax, rdi ; value to print
-	xor rdx, rdx ; zero other half
-	mov rbx, 10
-	
+    mov rax, rdi ; value to print
+    xor rdx, rdx ; zero other half
+    mov rbx, 10
+    
 print_rdi_start:
-	xor rdx, rdx ; zero other half
-	div rbx      ; divide by 10
+    xor rdx, rdx ; zero other half
+    div rbx      ; divide by 10
 
-	add rdx, 0x30
-	mov [printbuffer+rcx], dl
-	dec rcx
-	cmp rax, 9
-	ja print_rdi_start
+    add rdx, 0x30
+    mov [printbuffer+rcx], dl
+    dec rcx
+    cmp rax, 9
+    ja print_rdi_start
 
-	add rax, 0x30 ;last digit
-	mov [printbuffer+rcx], al
+    add rax, 0x30 ;last digit
+    mov [printbuffer+rcx], al
 
-	pop rcx ;restore original length
-	
-	mov rdi, printbuffer
-	mov rsi, rcx
-	call sys_write
+    pop rcx ;restore original length
+    
+    mov rdi, printbuffer
+    mov rsi, rcx
+    call sys_write
 
-	pop rcx
-	pop rbx
-	pop rax
-	stackpop
-	ret
+    pop rcx
+    pop rbx
+    pop rax
+    stackpop
+    ret
 

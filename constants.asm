@@ -60,7 +60,9 @@
 %define LSEEK_SET      0 ; seek to offset bytes
 %define LSEEK_END      2 ; seek to end plus offset
 
-%define SOCKOPT_SOL_TCP 6
+%define LEVEL_SOL_TCP 1
+%define LEVEL_IPPROTO_TCP 6
+%define SOCKOPT_TCP_REUSEADDR 2
 %define SOCKOPT_TCP_CORK 3
 
 ;Internal Constants
@@ -68,11 +70,11 @@
 %define CONTENT_TYPE_OCTET_STREAM 1
 %define CONTENT_TYPE_CSS          2
 %define CONTENT_TYPE_JAVASCRIPT   3
-%define CONTENT_TYPE_XHTML	      4
-%define CONTENT_TYPE_XML	      5
-%define CONTENT_TYPE_GIF	      6
-%define CONTENT_TYPE_PNG	      7
-%define CONTENT_TYPE_JPEG	      8
+%define CONTENT_TYPE_XHTML        4
+%define CONTENT_TYPE_XML          5
+%define CONTENT_TYPE_GIF          6
+%define CONTENT_TYPE_PNG          7
+%define CONTENT_TYPE_JPEG         8
 
 ;System Call Values
 %define SYS_WRITE 1  ;int fd, const void *buf, size_t count
@@ -86,12 +88,12 @@
 %define SYS_SOCKET       41 ;int domain, int type, int protocol
 %define SYS_ACCEPT       43 ;int sockfd, struct sockaddr *addr, socklen_t *addrlen
 %define SYS_SENDTO       44 ;int sockfd, const void *buf, size_t len, int flags, ...
-%define SYS_RECVFROM	 45 ;int sockfd, void *buf, size_t len, int flags
+%define SYS_RECVFROM     45 ;int sockfd, void *buf, size_t len, int flags
 %define SYS_BIND         49 ;int sockfd, const struct sockaddr *addr, socklen_t addrlen
 %define SYS_LISTEN       50 ;int sockfd, int backlog
-%define SYS_SELECT	     23 ;int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout
+%define SYS_SELECT       23 ;int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout
 %define SYS_GETDENTS     78 ;unsigned int fd, struct linux_dirent *dirp, unsigned int count
-%define SYS_OPEN		  2 ;const char *pathname, int flags, mode_t mode
-%define SYS_CLOSE		  3 ;unsigned int fd
+%define SYS_OPEN          2 ;const char *pathname, int flags, mode_t mode
+%define SYS_CLOSE         3 ;unsigned int fd
 %define SYS_SENDFILE     40 ;int out_fd, int in_fd, off_t *offset, size_t count
 %define SYS_SETSOCKOPT   54; int sockfd, int level, int optname,const void *optval, socklen_t optlen
