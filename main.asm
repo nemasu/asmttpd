@@ -187,13 +187,13 @@ worker_thread_continue:
     mov rsi, crlfx2
     call string_ends_with
     cmp rax, 1
-    jne worker_thread_400_repsonse
+    jne worker_thread_400_response
 
     mov rdi, [rbp-16]
     call get_request_type
        mov [request_type], rax
        cmp BYTE [request_type], REQ_UNK
-    je worker_thread_400_repsonse
+    je worker_thread_400_response
 
     ;Find request
     mov rax, 0x2F ; '/' character
@@ -201,7 +201,7 @@ worker_thread_continue:
     mov rcx, -1         ;Start count
     cld               ;Increment rdi
     repne scasb
-    jne worker_thread_400_repsonse
+    jne worker_thread_400_response
     mov rax, -2
     sub rax, rcx      ;Get the length
 
@@ -212,7 +212,7 @@ worker_thread_continue:
     mov rcx, -1
     cld
     repne scasb
-    jne worker_thread_400_repsonse
+    jne worker_thread_400_response
     mov rax, -1
     sub rax, rcx
     mov r9, rax
@@ -231,7 +231,7 @@ worker_thread_continue:
     worker_thread_append_directory_path:
     inc r15
     cmp r15, DIRECTORY_LENGTH_LIMIT
-    je worker_thread_400_repsonse
+    je worker_thread_400_response
     lodsb
     stosb
     inc r12
@@ -263,7 +263,7 @@ worker_thread_continue:
     mov rcx, r9
     sub rcx, r8
     cmp rcx, URL_LENGTH_LIMIT ; Make sure this does not exceed URL_PATH_LENGTH
-    jg worker_thread_400_repsonse
+    jg worker_thread_400_response
     add r12, rcx
     rep movsb
 
@@ -371,7 +371,7 @@ worker_thread_continue:
     mov rsi, find_bytes_range
     call string_contains
     cmp rax, -1
-    je worker_thread_400_repsonse
+    je worker_thread_400_response
 
     add rdi, rax
     add rdi, 6 ; go to number
@@ -420,10 +420,10 @@ worker_thread_continue:
     worker_thread_206_skip_unknown_end:
 
     cmp rcx, r8
-    jge worker_thread_413_repsonse
+    jge worker_thread_413_response
 
     cmp rbx, rcx
-    jg worker_thread_416_repsonse
+    jg worker_thread_416_response
 
     pop r9 ; type
     mov r10, r8  ;total
@@ -510,7 +510,7 @@ worker_thread_continue:
     ;---------200 Response End--------------
 
     ;---------400 Response Start------------
-    worker_thread_400_repsonse:
+    worker_thread_400_response:
     mov rdi, [rbp-16]
     mov rsi, 400
     call create_httpError_response
@@ -524,7 +524,7 @@ worker_thread_continue:
     ;---------400 Response End--------------
     
     ;---------413 Response Start------------
-    worker_thread_413_repsonse:
+    worker_thread_413_response:
     mov rdi, [rbp-16]
     mov rsi, 413
     call create_httpError_response
@@ -538,7 +538,7 @@ worker_thread_continue:
     ;---------413 Response End--------------
     
     ;---------416 Response Start------------
-    worker_thread_416_repsonse:
+    worker_thread_416_response:
     mov rdi, [rbp-16]
     mov rsi, 416
     call create_httpError_response
