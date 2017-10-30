@@ -26,6 +26,11 @@
     timeval: ;struct
         tv_sec  dq 0
         tv_usec dq 0
+    dirent: ;struct
+        d_ino dq 0
+        d_off dq 0
+        d_reclen dw 0
+        d_name db DIRECTORY_LENGTH_LIMIT
     sigaction: ;struct
         sa_handler  dq 0
         sa_flags    dq SA_RESTORER ; also dq, because padding
