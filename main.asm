@@ -88,6 +88,7 @@ _start:
 
     ;Try opening directory
     mov rdi, [directory_path]
+    mov rdx, OPEN_DIRECTORY
     call sys_open_directory
 
     cmp rax, 0
@@ -143,7 +144,7 @@ worker_thread:
 
     mov QWORD [rbp-16], 0 ; Used for pointer to recieve buffer
 
-    mov rdi, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT ; Allow room to append null, and to create path
+    mov rdi, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT+DIRECTORY_LIST_BUFFER ; Allow room to append null, and to create path
     call sys_mmap_mem
     mov QWORD [rbp-16], rax
 
@@ -217,8 +218,6 @@ worker_thread_continue:
     sub rax, rcx
     mov r9, rax
     add r9, r8  ;end offset
-
-    ;TODO: Assuming it's a file, need directory handling too
     
     pop r11 ; restore orig recvd length
     mov rdi, [rbp-16]
@@ -241,7 +240,7 @@ worker_thread_continue:
     dec r12 ; get rid of 0x00
 
     ;Check if default document needed
-       cmp r9, [request_offset] ; Offset of document requested
+    cmp r9, [request_offset] ; Offset of document requested
     jne no_default_document
     mov rsi, default_document
     mov rdi, [rbp-16]
@@ -253,7 +252,6 @@ worker_thread_continue:
     jmp worker_thread_remove_pre_dir
 
     no_default_document:
-
 
     ; Adds the file to the end of buffer ( where we juts put the document prefix )
     mov rsi, [rbp-16]
@@ -287,7 +285,7 @@ worker_thread_continue:
     ;mov rsi, rax
     ;call print_line
     ;-----End Simple logging
-    
+
     mov rdi, [rbp-16]
     add rdi, r9
     mov rsi, filter_prev_dir ; remove any '../'
@@ -301,6 +299,61 @@ worker_thread_continue:
     call detect_content_type
     mov r8, rax ;r8: Content Type
 
+    cmp r8, CONTENT_TYPE_OCTET_STREAM
+    jne worker_thread_response
+
+    worker_thread_test_dir:
+    mov rdi, [rbp-16]
+    add rdi, r9
+    mov rdx, OPEN_RDONLY
+    call sys_open_directory
+    cmp rax, 0
+    jl worker_thread_response ; TODO error cannot open dir
+
+    mov rbx, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT
+    mov rsi, [rbp-16]
+    add rsi, rbx
+    push r9 ; Save pointer to http buffer
+    mov r9, rsi
+
+    mov rdi, rax ; fd
+    mov rdx, DIRECTORY_LIST_BUFFER
+    call sys_get_dir_listing
+    cmp rax, 0 ; rax = bytes read
+    jl worker_thread_response ; TODO error no bytes read
+
+    stackpush
+
+    ; Save the first linux_dirent
+    mov rsi, r9
+    lodsq
+    mov [d_ino], rax
+
+    mov rsi, r9
+    add rsi, 8
+    lodsq
+    mov [d_off], rax
+
+    mov rsi, r9
+    add rsi, 16
+    lodsw
+    mov [d_reclen], ax
+
+    mov rsi, r9
+    mov rcx, 20
+
+    read_dir_name:
+    mov rsi, r9
+    add rsi, rcx
+    lodsq
+    inc rcx
+    cmp rax, 0
+    jne read_dir_name
+
+    stackpop
+    pop r9
+    ; TODO jmp worker_thread_dir_response
+
     worker_thread_response:
 
     ;Try to open requested file
@@ -310,7 +363,7 @@ worker_thread_continue:
     cmp rax, 0
 
     jl worker_thread_404_response ;file not found, so 404
-    
+
     ; Done with buffer offsets, put response and data into it starting at beg
     mov r10, rax ; r10: file fd
 

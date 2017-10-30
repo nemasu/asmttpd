@@ -31,6 +31,7 @@
 %define THREAD_BUFFER_SIZE 8192 ; 8KB recv buffer
 %define URL_LENGTH_LIMIT 2000
 %define DIRECTORY_LENGTH_LIMIT 100
+%define DIRECTORY_LIST_BUFFER 1024
 
 ;Request Types
 %define REQ_UNK    0
