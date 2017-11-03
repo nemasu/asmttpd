@@ -31,6 +31,9 @@
         sa_flags    dq SA_RESTORER ; also dq, because padding
         sa_restorer dq 0
         sa_mask     dq 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+    dir_ent_pointer dq 0
+    dir_ent_size dq 0
     
     ;Strings
     in_enter db "In Enter:",0x00
@@ -56,6 +59,8 @@
     header_range_search db "Range: ",0x00
     header_range_search_len equ $ - header_range_search
 
+    location db "Location: ",0x00
+
     find_bytes_range db "bytes=",0x00
     find_bytes_range_len equ $ - find_bytes_range
     
@@ -76,6 +81,8 @@
     http_200_len equ $ - http_200
     http_206 db "HTTP/1.1 206 Partial Content",0x0d,0x0a,0x00
     http_206_len equ $ - http_206
+    http_301 db "HTTP/1.1 301 Moved Permanently",0x0d,0x0a,0x00
+    http_301_len equ $ - http_301
     http_404 db "HTTP/1.1 404 Not Found",0x0d,0x0a,0x00
     http_404_len equ $ - http_404
     http_404_text db "I'm sorry, Dave. I'm afraid I can't do that. 404 Not Found",0x00
@@ -147,3 +154,10 @@
     extension_jpg      db ".jpg",0x00
     extension_jpeg     db ".jpeg",0x00
     extension_png      db ".png",0x00
+
+    ; dir listing
+    http_200_dir_list_open_h1_tag db "<h1>Index of ",0x00
+    http_200_dir_list_close_h1_tag db "</h1>",0x00
+    http_dir_entry_open_a_tag_pre db '<p><a href="',0x00
+    http_dir_entry_open_a_tag_post db '">',0x00
+    http_dir_entry_close_a_tag db '</a></p>',0x00
