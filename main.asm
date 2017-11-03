@@ -21,7 +21,7 @@
 
 %define ASMTTPD_VERSION "0.4.2"
 
-%define LISTEN_PORT 0x5000 ; PORT 80, network byte order
+%define LISTEN_PORT 0x911f ; PORT 80, network byte order
 
 %define THREAD_COUNT 10 ; Number of worker threads
 
@@ -39,6 +39,7 @@ section .text
     %include "string.asm"
     %include "http.asm"
     %include "syscall.asm"
+    %include "dirent.asm"
     ;%include "mutex.asm"
     ;%include "debug.asm"
 
@@ -88,6 +89,7 @@ _start:
 
     ;Try opening directory
     mov rdi, [directory_path]
+    mov rdx, OPEN_DIRECTORY
     call sys_open_directory
 
     cmp rax, 0
@@ -143,7 +145,7 @@ worker_thread:
 
     mov QWORD [rbp-16], 0 ; Used for pointer to recieve buffer
 
-    mov rdi, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT ; Allow room to append null, and to create path
+    mov rdi, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT+DIRECTORY_LIST_BUFFER+CUSTOM_CONTENT_BUFFER ; Allow room to append null, and to create path
     call sys_mmap_mem
     mov QWORD [rbp-16], rax
 
@@ -187,13 +189,13 @@ worker_thread_continue:
     mov rsi, crlfx2
     call string_ends_with
     cmp rax, 1
-    jne worker_thread_400_repsonse
+    jne worker_thread_400_response
 
     mov rdi, [rbp-16]
     call get_request_type
        mov [request_type], rax
        cmp BYTE [request_type], REQ_UNK
-    je worker_thread_400_repsonse
+    je worker_thread_400_response
 
     ;Find request
     mov rax, 0x2F ; '/' character
@@ -201,7 +203,7 @@ worker_thread_continue:
     mov rcx, -1         ;Start count
     cld               ;Increment rdi
     repne scasb
-    jne worker_thread_400_repsonse
+    jne worker_thread_400_response
     mov rax, -2
     sub rax, rcx      ;Get the length
 
@@ -212,13 +214,11 @@ worker_thread_continue:
     mov rcx, -1
     cld
     repne scasb
-    jne worker_thread_400_repsonse
+    jne worker_thread_400_response
     mov rax, -1
     sub rax, rcx
     mov r9, rax
     add r9, r8  ;end offset
-
-    ;TODO: Assuming it's a file, need directory handling too
     
     pop r11 ; restore orig recvd length
     mov rdi, [rbp-16]
@@ -231,7 +231,7 @@ worker_thread_continue:
     worker_thread_append_directory_path:
     inc r15
     cmp r15, DIRECTORY_LENGTH_LIMIT
-    je worker_thread_400_repsonse
+    je worker_thread_400_response
     lodsb
     stosb
     inc r12
@@ -241,7 +241,7 @@ worker_thread_continue:
     dec r12 ; get rid of 0x00
 
     ;Check if default document needed
-       cmp r9, [request_offset] ; Offset of document requested
+    cmp r9, [request_offset] ; Offset of document requested
     jne no_default_document
     mov rsi, default_document
     mov rdi, [rbp-16]
@@ -254,7 +254,6 @@ worker_thread_continue:
 
     no_default_document:
 
-
     ; Adds the file to the end of buffer ( where we juts put the document prefix )
     mov rsi, [rbp-16]
     add rsi, r8  ; points to beginning of path
@@ -263,7 +262,7 @@ worker_thread_continue:
     mov rcx, r9
     sub rcx, r8
     cmp rcx, URL_LENGTH_LIMIT ; Make sure this does not exceed URL_PATH_LENGTH
-    jg worker_thread_400_repsonse
+    jg worker_thread_400_response
     add r12, rcx
     rep movsb
 
@@ -287,7 +286,7 @@ worker_thread_continue:
     ;mov rsi, rax
     ;call print_line
     ;-----End Simple logging
-    
+
     mov rdi, [rbp-16]
     add rdi, r9
     mov rsi, filter_prev_dir ; remove any '../'
@@ -301,6 +300,46 @@ worker_thread_continue:
     call detect_content_type
     mov r8, rax ;r8: Content Type
 
+    cmp r8, CONTENT_TYPE_OCTET_STREAM
+    jne worker_thread_response
+
+    worker_thread_test_dir:
+    mov rdi, [rbp-16]
+    add rdi, r9
+    mov rdx, OPEN_RDONLY
+    call sys_open_directory
+    cmp rax, 0
+    jl worker_thread_response ; TODO error cannot open dir - 404?
+
+    ; Check if request ends in '/' and if not respond 301, which in turn triggers another request with a trailing '/'
+    push rax
+    mov rdi, [rbp-16]
+    add rdi, r9
+    call get_string_length
+    add rdi, rax
+    dec rdi
+    cmp byte[rdi], 0x2f
+    jne worker_thread_301_response
+    pop rax
+
+    mov rbx, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT
+    mov rsi, [rbp-16]
+    add rsi, rbx
+    push r9 ; Save pointer to http buffer
+    mov r9, rsi ; Pointer to dir list buffer, first entry contains bytes read
+
+    mov rdi, rax ; fd
+    mov rdx, DIRECTORY_LIST_BUFFER
+    call sys_get_dir_listing
+    cmp rax, 0 ; rax = bytes read
+    jl worker_thread_response ; TODO error no bytes read - 404?
+
+    mov [dir_ent_pointer], r9
+    mov [dir_ent_size], rax
+
+    pop r9
+    jmp worker_thread_200_response_dir_list
+
     worker_thread_response:
 
     ;Try to open requested file
@@ -310,7 +349,7 @@ worker_thread_continue:
     cmp rax, 0
 
     jl worker_thread_404_response ;file not found, so 404
-    
+
     ; Done with buffer offsets, put response and data into it starting at beg
     mov r10, rax ; r10: file fd
 
@@ -349,6 +388,22 @@ worker_thread_continue:
     jmp worker_thread_close
     ;---------404 Response End--------------
 
+    ;---------301 Response Start-------------
+worker_thread_301_response:
+
+    mov rdi, [rbp-16]
+    mov r10, CONTENT_TYPE_HTML
+    call create_http301_response
+
+    ;Send response
+    mov rdi, [rbp-8]
+    mov rsi, [rbp-16]
+    mov rdx, rax
+    call sys_send
+
+    ;and exit
+    jmp worker_thread_close
+    ;---------301 Response End--------------
 
     ;---------206 Response Start------------
     worker_thread_206_response:
@@ -371,7 +426,7 @@ worker_thread_continue:
     mov rsi, find_bytes_range
     call string_contains
     cmp rax, -1
-    je worker_thread_400_repsonse
+    je worker_thread_400_response
 
     add rdi, rax
     add rdi, 6 ; go to number
@@ -420,10 +475,10 @@ worker_thread_continue:
     worker_thread_206_skip_unknown_end:
 
     cmp rcx, r8
-    jge worker_thread_413_repsonse
+    jge worker_thread_413_response
 
     cmp rbx, rcx
-    jg worker_thread_416_repsonse
+    jg worker_thread_416_response
 
     pop r9 ; type
     mov r10, r8  ;total
@@ -469,6 +524,39 @@ worker_thread_continue:
     jmp worker_thread_close_file
     ;---------206 Response End--------------
 
+    ;------200 Dir List Response Start------
+    worker_thread_200_response_dir_list:
+    mov rdi, [rbp-16]
+    mov rbx, THREAD_BUFFER_SIZE+2+URL_LENGTH_LIMIT+DIRECTORY_LENGTH_LIMIT+DIRECTORY_LIST_BUFFER
+    inc rbx ; zero pad start
+    add rdi, rbx
+    push rdi ; save start of directory list buffer for later
+
+    call generate_dir_entries ; rax = new length
+    push rax ; save length of contents for later
+
+    ;Create Response
+    mov rdi, [rbp-16]
+    mov rsi, CONTENT_TYPE_HTML ; as we are sending custom HTML, change type
+    mov rdx, rax ; total file size
+    call create_http200_response
+
+    mov r8, rax ; header size
+
+    mov rdi, [rbp-8]
+    mov rsi, [rbp-16]
+    mov rdx, rax
+    call sys_send
+
+    ;Send the html formatted directory contents
+    pop rax ; restore buffer pointer and length
+    pop rdi
+    mov rsi, rdi
+    mov rdi, [rbp-8]
+    mov rdx, rax
+    call sys_send
+    jmp worker_thread_close
+    ;-------200 Dir List Response End-------
 
     ;---------200 Response Start------------
     worker_thread_200_response:
@@ -510,7 +598,7 @@ worker_thread_continue:
     ;---------200 Response End--------------
 
     ;---------400 Response Start------------
-    worker_thread_400_repsonse:
+    worker_thread_400_response:
     mov rdi, [rbp-16]
     mov rsi, 400
     call create_httpError_response
@@ -524,7 +612,7 @@ worker_thread_continue:
     ;---------400 Response End--------------
     
     ;---------413 Response Start------------
-    worker_thread_413_repsonse:
+    worker_thread_413_response:
     mov rdi, [rbp-16]
     mov rsi, 413
     call create_httpError_response
@@ -538,7 +626,7 @@ worker_thread_continue:
     ;---------413 Response End--------------
     
     ;---------416 Response Start------------
-    worker_thread_416_repsonse:
+    worker_thread_416_response:
     mov rdi, [rbp-16]
     mov rsi, 416
     call create_httpError_response

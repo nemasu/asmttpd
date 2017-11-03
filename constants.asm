@@ -31,6 +31,8 @@
 %define THREAD_BUFFER_SIZE 8192 ; 8KB recv buffer
 %define URL_LENGTH_LIMIT 2000
 %define DIRECTORY_LENGTH_LIMIT 100
+%define DIRECTORY_LIST_BUFFER 1024 ; holds linux_dirents
+%define CUSTOM_CONTENT_BUFFER 1024 ; holds directory listing HTML formatted reply
 
 ;Request Types
 %define REQ_UNK    0
@@ -75,6 +77,17 @@
 %define CONTENT_TYPE_GIF          6
 %define CONTENT_TYPE_PNG          7
 %define CONTENT_TYPE_JPEG         8
+
+;Dirent types
+%define DT_UNKNOWN 0
+%define DT_FIFO    1
+%define DT_CHR     2
+%define DT_DIR     4
+%define DT_BLK     6
+%define DT_REG     8
+%define DT_LNK     10
+%define DT_SOCK    12
+%define DT_WHT     14
 
 ;System Call Values
 %define SYS_WRITE 1  ;int fd, const void *buf, size_t count
