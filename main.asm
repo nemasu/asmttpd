@@ -306,7 +306,7 @@ worker_thread_continue:
     worker_thread_test_dir:
     mov rdi, [rbp-16]
     add rdi, r9
-    mov rdx, OPEN_RDONLY
+    mov rdx, OPEN_RDONLY | OPEN_DIRECTORY
     call sys_open_directory
     cmp rax, 0
     jl worker_thread_response ; TODO error cannot open dir - 404?
