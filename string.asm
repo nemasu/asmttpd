@@ -286,17 +286,11 @@ print_line: ; rdi = pointer, rsi = length
     ret
 
 get_string_length: ; rdi = pointer, ret rax
-    stackpush
-    cld
-    mov r10, -1
-    mov rsi, rdi
-get_string_length_start:
-    inc r10 
-    lodsb
-    cmp al, 0x00
-    jne get_string_length_start
-    mov rax, r10
-    stackpop
+    mov rax, -1
+get_string_length_loop:
+    inc rax
+    cmp byte [rdi + rax]
+    jne get_string_length_loop
     ret
 
 get_number_of_digits: ; of rdi, ret rax
