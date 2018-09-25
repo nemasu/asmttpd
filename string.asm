@@ -94,13 +94,26 @@ string_atoi: ; rdi = string, rax = int
     ret
 
 string_copy: ; rdi = dest, rsi = source, rdx = bytes to copy
-    stackpush
-    mov rcx, rdx
-    inc rcx ; to get null
-    cld
-    rep movsb 
-    stackpop
-    ret
+    push rdx
+	push rcx
+	
+	inc rdx
+	xor eax, eax
+
+string_copy_loop:
+	cmp rax, rdx
+	je string_copy_return
+	
+	mov cl, byte [rsi + rax]
+	mov byte [rdi + rax], cl
+	
+	inc rax
+	jmp string_copy_loop
+	
+string_copy_return:
+	pop rdx
+	pop rcx
+	ret
 
 string_concat_int: ;rdi = string being added to, rsi = int to add, ret: new length
     stackpush
@@ -136,8 +149,7 @@ string_concat: ;rdi = string being added to, rsi = string to add, ret: new lengt
 
     stackpop
     ret
-    
-    
+
 string_contains: ;rdi = haystack, rsi = needle, ret = rax: location of string, else -1
     push r9
 	push rdx
