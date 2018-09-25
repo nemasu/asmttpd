@@ -136,47 +136,57 @@ string_concat: ;rdi = string being added to, rsi = string to add, ret: new lengt
 
     stackpop
     ret
-
+    
+    
 string_contains: ;rdi = haystack, rsi = needle, ret = rax: location of string, else -1
-    stackpush
-    
-    xor r10, r10 ; total length from beginning
-    xor r8, r8 ; count from offset
-
-    string_contains_start:
-    mov dl, BYTE [rdi]
-    cmp dl, 0x00
-    je string_contains_ret_no
-    cmp dl, BYTE [rsi]
-    je string_contains_check
-    inc rdi
-    inc r10 ; count from base ( total will be r10 + r8 )
-    jmp string_contains_start
-
-    string_contains_check:
-    inc r8 ; already checked at pos 0
-    cmp BYTE [rsi+r8], 0x00
-    je string_contains_ret_ok
-    mov dl, [rdi+r8]
-    cmp dl ,0x00
-    je string_contains_ret_no
-    cmp dl, [rsi+r8]
-    je string_contains_check
-    
-    inc rdi
-    inc r10
-    jmp string_contains_start
-
-    string_contains_ret_ok:
-    mov rax, r10
-    jmp string_contains_ret
-
-    string_contains_ret_no:
-    mov rax, -1
-
-    string_contains_ret:
-    stackpop
-    ret
+    push r9
+	push rdx
+	push rcx
+	push rdi
+	push r8
+	
+	xor r9d, r9d
+	xor edx, edx
+	
+string_contains_start:
+	mov cl, byte [rdi]
+	mov rax, r9
+	test cl, cl
+	je string_contains_returnOr
+	
+	cmp cl, byte [rsi]
+	
+string_contains_inner:
+	je string_contains_maybe
+	
+	inc r9
+	inc rdi
+	jmp string_contains_start
+	
+string_contains_maybe:
+	inc rdx
+	movzx ecx, byte [rsi + rdx]
+	test cl, cl
+	je string_contains_return
+	
+	movsx r8d, byte [rdi + rdx]
+	
+	test r8b, r8b
+	je string_contains_returnOr
+	
+	cmp r8d, ecx
+	jmp string_contains_inner
+	
+string_contains_returnOr:
+	or rax, -1
+	
+string_contains_return:
+	pop r8
+	pop rdi
+	pop rcx
+	pop rdx
+	pop r9
+	ret
 
 
 ;Removes first instance of string
