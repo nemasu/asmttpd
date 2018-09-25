@@ -286,41 +286,37 @@ print_line: ; rdi = pointer, rsi = length
     ret
 
 get_string_length: ; rdi = pointer, ret rax
-    stackpush
-    cld
-    mov r10, -1
-    mov rsi, rdi
-get_string_length_start:
-    inc r10 
-    lodsb
-    cmp al, 0x00
-    jne get_string_length_start
-    mov rax, r10
-    stackpop
+    mov rax, -1
+get_string_length_loop:
+    inc rax
+    cmp byte [rdi + rax], 0
+    jne get_string_length_loop
     ret
+
 
 get_number_of_digits: ; of rdi, ret rax
-    stackpush
-    push rbx
-    push rcx
-    
-    mov rax, rdi
-    mov rbx, 10
-    mov rcx, 1 ;count
-gnod_cont:
-    cmp rax, 10
-    jb gnod_ret
-
-    xor rdx,rdx
-    div rbx
-
-    inc rcx
-    jmp gnod_cont
-gnod_ret:
-    mov rax, rcx
-    
-    pop rcx
-    pop rbx
-    stackpop
-    ret
-
+	push rdi
+	push rsi
+	push rdx
+	push rcx
+	
+	mov rax, rdi
+	mov ecx, 1
+	mov esi, 10
+	
+get_number_of_digits_loop:
+	cmp rax, 9
+	jbe get_number_of_digits_return
+	
+	xor edx, edx
+	div rsi
+	inc rcx
+	jmp get_number_of_digits_loop
+	
+get_number_of_digits_return:
+	mov rax, rcx
+	pop rcx
+	pop rdx
+	pop rsi
+	pop rdi
+	ret
