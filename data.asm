@@ -28,7 +28,6 @@
         at sin_addr,   dd 0 ;INADDR_ANY
     iend
 
-    directory_path dq 0    
     request_type dq 0
     request_offset dq 0
     

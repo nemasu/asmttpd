@@ -58,7 +58,7 @@ _start:
     mov [listen_port], eax
     
     mov rax, [rsp+16] ;Directory (first) parameter
-    mov [directory_path], rax 
+    mov [directory_path], rax
     
     ; Register signal handlers ( just close all other threads by jumping to SYS_EXIT_GROUP )
     mov r10, 8 ; sizeof(sigset_t) displays 128, but strace shows 8 ... so 8 it is! -_-
