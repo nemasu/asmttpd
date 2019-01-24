@@ -32,10 +32,14 @@ You will need `yasm` installed.
 Usage
 =======
 
-`sudo ./asmttpd /path/to/web_root`
+`./asmttpd /path/to/web_root port_number`
+Example: `./asmttpd ./web_root 8080`
 
 Changes
 =======
+2019-01-24 : asmttpd - 0.4.3
+
+* Added port number as parameter.
 
 2017-10-18 : asmttpd - 0.4.2
 

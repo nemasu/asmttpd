@@ -16,4 +16,6 @@
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
     listen_socket: resq 1
+    listen_port: resw 1
     one_constant: resq 1
+    directory_path: resq 1

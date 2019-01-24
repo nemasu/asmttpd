@@ -16,13 +16,21 @@
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
 
-    sockaddr_in: ;struct
-        sin_family dw AF_INET
-        sin_port   dw LISTEN_PORT
-        sin_addr   dd 0 ;INADDR_ANY
-    directory_path dq 0    
-       request_type dq 0
-       request_offset dq 0
+    struc sockaddr_in
+        sin_family: resw 1
+        sin_port:   resw 1
+        sin_addr:   resd 1
+    endstruc
+    
+    sa: istruc sockaddr_in
+        at sin_family, dw AF_INET
+        at sin_port,   dw 0
+        at sin_addr,   dd 0 ;INADDR_ANY
+    iend
+
+    request_type dq 0
+    request_offset dq 0
+    
     timeval: ;struct
         tv_sec  dq 0
         tv_usec dq 0
@@ -44,10 +52,8 @@
     msg_bind_error_len equ $ - msg_bind_error
     msg_error     db "An error has occured, exiting",0x00
     msg_error_len equ $ - msg_error
-    msg_help      db "Usage: ./asmttpd /path/to/directory",0x00
+    msg_help      db "Usage: ./asmttpd /path/to/directory port",0x00
     msg_help_len  equ $ - msg_help
-    msg_using_directory dd "Using Document Root: ",0x00
-    msg_using_directory_len equ $ - msg_using_directory
     msg_not_a_directory dd "Error: Specified document root is not a directory",0x00
     msg_not_a_directory_len equ $ - msg_not_a_directory
     msg_request_log db 0x0a,"Request: ",0x00
