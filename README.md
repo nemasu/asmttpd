@@ -33,6 +33,7 @@ Usage
 =======
 
 `./asmttpd /path/to/web_root port_number`
+
 Example: `./asmttpd ./web_root 8080`
 
 Changes
