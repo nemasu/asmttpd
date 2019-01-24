@@ -15,6 +15,10 @@
 ;
 ;You should have received a copy of the GNU General Public License
 ;along with asmttpd.  If not, see <http://www.gnu.org/licenses/>.
+
+;hint, use these with GDB
+;set follow-fork-mode child
+
 section .bss
 printbuffer:   resb 1024;debug
 

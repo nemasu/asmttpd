@@ -18,3 +18,4 @@
     listen_socket: resq 1
     listen_port: resw 1
     one_constant: resq 1
+    directory_path: resq 1
