@@ -349,17 +349,17 @@ create_http404_response: ;rdi - pointer to buffer
 get_request_type: ;rdi - pointer to buffer, ret = rax: request type
     stackpush
 
-       cld
-       mov r10, -1
-       mov rsi, rdi
-       find_request_string:
-       inc r10
-       lodsb
-       cmp al, 0x20
-       jne find_request_string
-       mov rax, r10
-       add rax, 0x03
-       mov [request_offset], rax
+    cld
+    mov r10, -1
+    mov rsi, rdi
+    find_request_string:
+    inc r10
+    lodsb
+    cmp al, 0x20
+    jne find_request_string
+    mov rax, r10
+    add rax, 0x03
+    mov [request_offset], rax
 
     mov rax, REQ_UNK
 
