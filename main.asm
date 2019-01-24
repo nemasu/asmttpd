@@ -93,7 +93,7 @@ _start:
     mov rdi, [listen_socket]
     call sys_reuse
 
-    ;Bind to port 80
+    ;Bind to port
     call sys_bind_server
     cmp rax, 0
     jl exit_bind_error
