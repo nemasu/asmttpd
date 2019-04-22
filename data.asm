@@ -139,6 +139,9 @@
     content_type_gif db "image/gif",0x0d,0x0a,0x00
     content_type_gif_len equ $ - content_type_gif
 
+    content_type_svg db "image/svg+xml",0x0d,0x0a,0x00
+    content_type_svg_len equ $ - content_type_svg
+
     default_document db "/index.html",0x00
     default_document_len equ $ - default_document
     
@@ -153,3 +156,4 @@
     extension_jpg      db ".jpg",0x00
     extension_jpeg     db ".jpeg",0x00
     extension_png      db ".png",0x00
+    extension_svg      db ".svg",0x00

@@ -75,6 +75,7 @@
 %define CONTENT_TYPE_GIF          6
 %define CONTENT_TYPE_PNG          7
 %define CONTENT_TYPE_JPEG         8
+%define CONTENT_TYPE_SVG          9
 
 ;System Call Values
 %define SYS_WRITE 1  ;int fd, const void *buf, size_t count

@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.4.3"
+%define ASMTTPD_VERSION "0.4.4"
 
 %define THREAD_COUNT 10 ; Number of worker threads
 
