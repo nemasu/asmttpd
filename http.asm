@@ -80,6 +80,12 @@ detect_content_type: ;rdi - pointer to buffer that contains request, ret - rax: 
     cmp rax, 1
     je detect_content_type_ret
 
+    mov rsi, extension_svg
+    call string_ends_with
+    mov r10, CONTENT_TYPE_SVG
+    cmp rax, 1
+    je detect_content_type_ret
+
     mov r10, CONTENT_TYPE_OCTET_STREAM ; default to octet-stream
     detect_content_type_ret:
     mov rax, r10
@@ -112,6 +118,8 @@ add_content_type_header: ;rdi - pointer to buffer, rsi - type
     je add_response_png
     cmp r10, CONTENT_TYPE_JPEG
     je add_response_jpeg
+    cmp r10, CONTENT_TYPE_SVG
+    je add_response_svg
     
     jmp add_response_octet_stream
 
@@ -158,6 +166,11 @@ add_content_type_header: ;rdi - pointer to buffer, rsi - type
     add_response_jpeg:
     mov rsi, content_type_jpeg
     call string_concat
+
+    add_response_svg:
+    mov rsi, content_type_svg
+    call string_concat
+
 
     add_response_cont:
     stackpop
