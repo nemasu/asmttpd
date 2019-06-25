@@ -77,6 +77,7 @@
 %define CONTENT_TYPE_GIF          6
 %define CONTENT_TYPE_PNG          7
 %define CONTENT_TYPE_JPEG         8
+%define CONTENT_TYPE_SVG          9
 
 ;Dirent types
 %define DT_UNKNOWN 0

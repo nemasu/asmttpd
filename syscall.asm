@@ -123,8 +123,12 @@ sys_listen:
 
 sys_bind_server:
     stackpush
+    
+    mov rsi, [listen_port]
+    mov [sa + sin_port], rsi
+    
     mov rdi, [listen_socket]
-    mov rsi, sockaddr_in
+    mov rsi, sa
     mov rdx, 16
     mov rax, SYS_BIND
     syscall

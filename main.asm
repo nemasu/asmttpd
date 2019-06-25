@@ -19,23 +19,19 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.4.2"
-
-%define LISTEN_PORT 0x5000 ; PORT 80, network byte order
+%define ASMTTPD_VERSION "0.4.4"
 
 %define THREAD_COUNT 10 ; Number of worker threads
 
 ;Follwing amd64 syscall standards for internal function calls: rdi rsi rdx r10 r8 r9
+
 section .data
-
     %include "data.asm"
-
+    
 section .bss
-
     %include "bss.asm"
 
 section .text
-
     %include "string.asm"
     %include "http.asm"
     %include "syscall.asm"
@@ -54,22 +50,17 @@ _start:
     call print_line
 
     mov rdi, [rsp]    ;Num of args
-    cmp rdi,2         ;Exit if no argument, should be directory location
+    cmp rdi,3         ;Exit if no argument, should be directory location
     jne exit_with_help
-
-    mov rax, [rsp+16] ;Directory (first) parameter
-    mov [directory_path], rax 
-
-    mov rdi, msg_using_directory
-    mov rsi, msg_using_directory_len
-    call sys_write
+        
+    mov rdi, [rsp+16+8]; Port (second) parameter
+    call string_atoi
+    xchg al, ah
+    mov [listen_port], eax
     
-    mov rdi, [directory_path]
-    call get_string_length
-    mov rsi, rax
-    call print_line
-
-
+    mov rax, [rsp+16] ;Directory (first) parameter
+    mov [directory_path], rax
+    
     ; Register signal handlers ( just close all other threads by jumping to SYS_EXIT_GROUP )
     mov r10, 8 ; sizeof(sigset_t) displays 128, but strace shows 8 ... so 8 it is! -_-
     xor rdx, rdx
@@ -86,7 +77,6 @@ _start:
     mov rax, SYS_RT_SIGACTION
     syscall
     
-
     ;Try opening directory
     mov rdi, [directory_path]
     mov rdx, OPEN_DIRECTORY
@@ -105,7 +95,7 @@ _start:
     mov rdi, [listen_socket]
     call sys_reuse
 
-    ;Bind to port 80
+    ;Bind to port
     call sys_bind_server
     cmp rax, 0
     jl exit_bind_error
@@ -193,8 +183,8 @@ worker_thread_continue:
 
     mov rdi, [rbp-16]
     call get_request_type
-       mov [request_type], rax
-       cmp BYTE [request_type], REQ_UNK
+    mov [request_type], rax
+    cmp BYTE [request_type], REQ_UNK
     je worker_thread_400_response
 
     ;Find request
