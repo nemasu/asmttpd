@@ -13,7 +13,7 @@ What works:
 * Serving files from specified document root.
 * HEAD requests.
 * 200, 206, 404, 400, 413, 416
-* Content-types: xml, html, xhtml, gif, png, jpeg, css, js, and octet-stream.
+* Content-types: xml, html, xhtml, gif, png, jpeg, css, js, svg, and octet-stream.
   
 Planned Features:
 * Directory listing.
@@ -32,10 +32,19 @@ You will need `yasm` installed.
 Usage
 =======
 
-`sudo ./asmttpd /path/to/web_root`
+`./asmttpd /path/to/web_root port_number`
+
+Example: `./asmttpd ./web_root 8080`
 
 Changes
 =======
+2019-04-22 : asmttpd - 0.4.4
+
+* Added SVG support.
+
+2019-01-24 : asmttpd - 0.4.3
+
+* Added port number as parameter.
 
 2017-10-18 : asmttpd - 0.4.2
 
