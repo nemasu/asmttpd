@@ -145,10 +145,17 @@ sys_create_tcp_socket:
     stackpop
     ret
 
-sys_open_directory:;rdi = path, rax = ret ( fd )
+sys_open_directory:;rdi = path, rax = ret ( fd ), rdx = flags
     stackpush
-    mov rsi, OPEN_DIRECTORY | OPEN_RDONLY ;flags 
+    mov rsi, rdx ;flags
     mov rax, SYS_OPEN
+    syscall
+    stackpop
+    ret
+
+sys_get_dir_listing:;rdi = fd, rsi = buffer, rdx = buffer_size
+    stackpush
+    mov rax, SYS_GETDENTS
     syscall
     stackpop
     ret
