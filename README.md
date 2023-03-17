@@ -20,7 +20,19 @@ Planned Features:
 
 Current Limitations / Known Issues
 =======
-* Sendfile can hang if GET is cancelled.
+<details>
+ <summary>Sendfile can hang if GET is cancelled.</summary>
+ 
+ _**(Explanation generated using GPT-4)**_
+
+  The issue is related to the use of the `sendfile` system call when handling HTTP GET requests for static files. `sendfile` is an efficient way to send the contents of a file from one file descriptor to another, often used by web servers to transmit a file directly to a socket without the need for additional buffer copying in the user space.
+
+  The issue can occur when a client (e.g., a browser) sends an HTTP GET request and then cancels the request before the server has finished sending the file. In this case, the server continues to send the remaining file data using the `sendfile` system call, but the client is no longer expecting the data. As a result, the server may become stuck in the `sendfile` system call, causing it to hang and potentially blocking other requests from being handled.
+
+  This issue can be particularly problematic in single-threaded or event-driven servers like asmttpd, where a single process is responsible for handling multiple requests concurrently. If the server hangs in the sendfile call, it might not be able to process other incoming requests, significantly degrading the server's performance.
+
+  To resolve this issue, a server could implement a timeout mechanism to detect when a client has disconnected or cancelled a request. If the timeout is reached, the server could stop sending the file and free up resources to handle other requests. Alternatively, the server could use non-blocking I/O or multi-threading to handle multiple connections simultaneously, reducing the impact of a hanging sendfile call on overall server performance. However, implementing these solutions may require additional complexity and overhead in the server's code.
+</details>
 
 Installation
 =======
