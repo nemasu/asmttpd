@@ -38,6 +38,10 @@ Example: `./asmttpd ./web_root 8080`
 
 Changes
 =======
+2021-01-15 : asmttpd - 0.4.5
+
+* string_contains bugfix.
+
 2019-04-22 : asmttpd - 0.4.4
 
 * Added SVG support.

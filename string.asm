@@ -165,6 +165,7 @@ string_contains: ;rdi = haystack, rsi = needle, ret = rax: location of string, e
     
     inc rdi
     inc r10
+    xor r8, r8
     jmp string_contains_start
 
     string_contains_ret_ok:

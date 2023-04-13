@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.4.4"
+%define ASMTTPD_VERSION "0.4.5"
 
 %define THREAD_COUNT 10 ; Number of worker threads
 
@@ -276,7 +276,6 @@ worker_thread_continue:
     ;mov rsi, rax
     ;call print_line
     ;-----End Simple logging
-
     mov rdi, [rbp-16]
     add rdi, r9
     mov rsi, filter_prev_dir ; remove any '../'
@@ -339,7 +338,6 @@ worker_thread_continue:
     cmp rax, 0
 
     jl worker_thread_404_response ;file not found, so 404
-
     ; Done with buffer offsets, put response and data into it starting at beg
     mov r10, rax ; r10: file fd
 
