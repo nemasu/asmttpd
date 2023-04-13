@@ -19,7 +19,7 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.4.5"
+%define ASMTTPD_VERSION "0.4.6"
 
 %define THREAD_COUNT 10 ; Number of worker threads
 
@@ -377,7 +377,7 @@ worker_thread_continue:
     ;---------404 Response End--------------
 
     ;---------301 Response Start-------------
-worker_thread_301_response:
+    worker_thread_301_response:
 
     mov rdi, [rbp-16]
     mov r10, CONTENT_TYPE_HTML
