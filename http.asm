@@ -359,6 +359,43 @@ create_http404_response: ;rdi - pointer to buffer
     stackpop
     ret
 
+create_http301_response: ;rdi - pointer to buffer
+    stackpush
+
+    mov rsi, http_301  ;First one we copy
+    mov rdx, http_301_len
+    call string_copy
+
+    mov rsi, server_header
+    call string_concat
+
+    mov rsi, r10
+    call add_content_type_header
+
+    mov rsi, connection_header
+    call string_concat
+
+    mov rsi, location
+    call string_concat
+
+    ; Remove directory path (web_root) from buffer
+    mov rsi, [rbp-16]
+    add rsi, r9
+    call string_concat
+    mov rsi, [directory_path]
+    call string_remove
+
+    mov rsi, char_slash
+    call string_concat
+
+    mov rsi, crlf
+    call string_concat
+
+    call get_string_length
+
+    stackpop
+    ret
+
 get_request_type: ;rdi - pointer to buffer, ret = rax: request type
     stackpush
 

@@ -6,7 +6,7 @@ Web server for Linux written in amd64 assembly.
 Features:
 * Multi-threaded.
 * No libraries required ( only 64-bit Linux ).
-* Very small binary, roughly 6 KB.
+* Very small binary.
 * Quite fast.
 
 What works:
@@ -38,6 +38,10 @@ Example: `./asmttpd ./web_root 8080`
 
 Changes
 =======
+2021-04-13 : asmttpd - 0.4.6
+
+* Initial directory listing support.
+
 2021-01-15 : asmttpd - 0.4.5
 
 * string_contains bugfix.
