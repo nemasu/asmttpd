@@ -171,3 +171,13 @@
     http_dir_entry_open_a_tag_pre db '<p><a href="',0x00
     http_dir_entry_open_a_tag_post db '">',0x00
     http_dir_entry_close_a_tag db '</a></p>',0x00
+
+    ; Request type
+    req_types db 'GET', 0     
+    req_get_length equ $ - req_types - 1 
+
+    req_head db 'HEAD', 0     
+    req_head_length equ $ - req_head - 1 
+
+    req_type_ptrs dq req_types, req_head ; array of request types
+    req_type_lengths dq req_get_length, req_head_length 

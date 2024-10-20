@@ -413,26 +413,33 @@ get_request_type: ;rdi - pointer to buffer, ret = rax: request type
 
     mov rax, REQ_UNK
 
-    check_get:
-    cmp byte[rdi+0], 0x47
-    jne check_head
-    cmp byte[rdi+1], 0x45
-    jne check_head
-    cmp byte[rdi+2], 0x54
-    jne check_head
+  check_request:
+    ; add to array in data in order check to the request type
+
+    mov rsi, [req_type_ptrs + rbx * 8]  
+    mov rcx, [req_type_lengths + rbx * 8]
+
+    repe cmpsb              
+    jne next_request 
+
+    cmp rbx, 0              
+    je set_req_get
+    cmp rbx, 1             
+    je set_req_head
+
+  set_req_get:
     mov rax, REQ_GET
+    jmp request_type_return                      
 
-    check_head:
-    cmp byte[rdi+0], 0x48
-    jne request_type_return
-    cmp byte[rdi+1], 0x45
-    jne request_type_return
-    cmp byte[rdi+2], 0x41
-    jne request_type_return
-    cmp byte[rdi+3], 0x44
-    jne request_type_return
+  set_req_head:
     mov rax, REQ_HEAD
+    jmp request_type_return
 
-    request_type_return:
+  next_request:
+    inc rbx                
+    cmp rbx, rdx   
+    jl check_request 
+
+  request_type_return:
     stackpop
     ret
