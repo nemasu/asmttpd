@@ -174,10 +174,10 @@
 
     ; Request type
     req_get db 'GET', 0     
-    req_get_length equ $ - req_get - 1 
+    req_get_offset equ $ - req_get
 
     req_head db 'HEAD', 0     
-    req_head_length equ $ - req_head - 1 
+    req_head_offset equ $ - req_head
 
     req_type_ptrs dq req_get, req_head ; array of request types
-    req_type_lengths dq req_get_length, req_head_length 
+    req_type_count equ ($ - req_type_ptrs) / 8
