@@ -410,34 +410,23 @@ get_request_type: ;rdi - pointer to buffer, ret = rax: request type
     mov rax, r10
     add rax, 0x03
     mov [request_offset], rax
-    xor rbx, rbx
-
-    mov rax, REQ_UNK
-
-  check_request:
-    ; add to array in data in order check to the request type
-    mov rsi, [req_type_ptrs + rbx * 8] 
-    mov rcx, -1
-    mov rdx, rdi
-
-    repe cmpsb              
-    jne next_request 
-
-    jmp [req_type_ptrs + rbx * 8] ; automatically jmp to the correct method
-
-  next_request:
-    inc rbx               
-    cmp rbx, req_type_count  
-    jne check_request 
-
-  set_req_get:
-    mov rax, REQ_GET
-    jmp request_type_return                  
-
-  set_req_head:
-    mov rax, REQ_HEAD
-    jmp request_type_return
     
-  request_type_return:
+    mov rax, REQ_UNK
+    
+    check_request_loop:
+    mov edx, [rdi]
+    lea rsi, [request_types + rbx * 4] 
+    cmp edx, [rsi]
+    jne next_request
+
+    movzx rax, byte [request_values + rbx]
+    jmp request_type_return
+
+    next_request:
+    inc rbx
+    cmp rbx, num_requests
+    jl check_request_loop
+
+    request_type_return:
     stackpop
     ret

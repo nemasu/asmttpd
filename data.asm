@@ -172,12 +172,7 @@
     http_dir_entry_open_a_tag_post db '">',0x00
     http_dir_entry_close_a_tag db '</a></p>',0x00
 
-    ; Request type
-    req_get db 'GET', 0     
-    req_get_offset equ $ - req_get
-
-    req_head db 'HEAD', 0     
-    req_head_offset equ $ - req_head
-
-    req_type_ptrs dq req_get, req_head ; array of request types
-    req_type_count equ ($ - req_type_ptrs) / 8
+    ; Request type  
+    request_types db "GET ", "HEAD " ; space after each request type
+    request_values db REQ_GET, REQ_HEAD
+    num_requests equ ($ - request_types) / 4
