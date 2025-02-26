@@ -149,6 +149,9 @@
     content_type_svg db "image/svg+xml",0x0d,0x0a,0x00
     content_type_svg_len equ $ - content_type_svg
 
+    content_type_txt db "text/plain",0x0d,0x0a,0x00
+    content_type_txt_len equ $ - content_type_txt
+
     default_document db "/index.html",0x00
     default_document_len equ $ - default_document
     
@@ -164,6 +167,7 @@
     extension_jpeg     db ".jpeg",0x00
     extension_png      db ".png",0x00
     extension_svg      db ".svg",0x00
+    extension_txt      db ".txt",0x00
 
     ; dir listing
     http_200_dir_list_open_h1_tag db "<h1>Index of ",0x00
