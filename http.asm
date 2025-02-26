@@ -166,10 +166,12 @@ add_content_type_header: ;rdi - pointer to buffer, rsi - type
     add_response_jpeg:
     mov rsi, content_type_jpeg
     call string_concat
+    jmp add_response_cont
 
     add_response_svg:
     mov rsi, content_type_svg
     call string_concat
+    jmp add_response_cont
 
 
     add_response_cont:
