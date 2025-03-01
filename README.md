@@ -13,7 +13,7 @@ What works:
 * Serving files from specified document root.
 * HEAD requests.
 * 200, 206, 404, 400, 413, 416
-* Content-types: xml, html, xhtml, gif, png, jpeg, css, js, svg, and octet-stream.
+* Content-types: xml, html, xhtml, gif, png, jpeg, css, js, svg, txt, and octet-stream.
   
 Planned Features:
 * Directory listing.
@@ -38,6 +38,10 @@ Example: `./asmttpd ./web_root 8080`
 
 Changes
 =======
+2025-03-01 : asmttpd - 0.4.7
+
+* Added txt type.
+
 2023-04-13 : asmttpd - 0.4.6
 
 * Initial directory listing support.

@@ -19,11 +19,11 @@
 %include "constants.asm"
 %include "macros.asm"
 
-%define ASMTTPD_VERSION "0.4.6"
+%define ASMTTPD_VERSION "0.4.7"
 
 %define THREAD_COUNT 10 ; Number of worker threads
 
-;Follwing amd64 syscall standards for internal function calls: rdi rsi rdx r10 r8 r9
+;Following amd64 syscall standards for internal function calls: rdi rsi rdx r10 r8 r9
 
 section .data
     %include "data.asm"
