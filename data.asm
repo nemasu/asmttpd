@@ -175,3 +175,8 @@
     http_dir_entry_open_a_tag_pre db '<p><a href="',0x00
     http_dir_entry_open_a_tag_post db '">',0x00
     http_dir_entry_close_a_tag db '</a></p>',0x00
+
+    ; Request type  
+    request_types db "GET ", "HEAD " ; space after each request type
+    request_values db REQ_GET, REQ_HEAD
+    num_requests equ ($ - request_types) / 4
